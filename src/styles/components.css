@@ -513,6 +513,32 @@
   border-bottom: 1px solid var(--gray-200);
 }
 
+.greeting-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.clear-chat-btn {
+  background: var(--gray-100);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray-600);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clear-chat-btn:hover {
+  background: var(--gray-200);
+  color: var(--navy-blue);
+}
+
 .greeting h1 {
   font-size: 1.75rem;
   font-weight: 600;

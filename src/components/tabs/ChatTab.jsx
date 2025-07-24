@@ -1,13 +1,20 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Send, RotateCcw, Link, Lightbulb, TrendingUp, MessageCircle, Sparkles } from 'lucide-react'
+import { Send, RotateCcw, Link, Lightbulb, TrendingUp, MessageCircle, Sparkles, Trash2 } from 'lucide-react'
+import { GoogleGenerativeAI } from "@google/generative-ai"
 
 const ChatTab = ({ user }) => {
   const [message, setMessage] = useState('')
   const [messages, setMessages] = useState([])
   const [isTyping, setIsTyping] = useState(false)
   const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0)
+  const [conversationHistory, setConversationHistory] = useState([])
   const messagesEndRef = useRef(null)
+
+  // Initialize Google AI (you'll need to set your API key)
+  const apiKey = import.meta.env.VITE_GOOGLE_AI_API_KEY
+  const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null
+  const model = genAI ? genAI.getGenerativeModel({ model: "gemini-1.5-flash" }) : null
 
   const suggestions = [
     "How do I start investing with $100?",
@@ -25,6 +32,59 @@ const ChatTab = ({ user }) => {
     { icon: TrendingUp, text: "Show examples", action: "examples" },
     { icon: MessageCircle, text: "What's next?", action: "next" }
   ]
+
+  useEffect(() => {
+    // Load conversation history from session storage when component mounts
+    const savedMessages = sessionStorage.getItem('askCentsMessages')
+    const savedHistory = sessionStorage.getItem('askCentsHistory')
+    
+    if (savedMessages) {
+      try {
+        const parsedMessages = JSON.parse(savedMessages)
+        setMessages(parsedMessages)
+      } catch (error) {
+        console.error('Error loading saved messages:', error)
+      }
+    }
+    
+    if (savedHistory) {
+      try {
+        const parsedHistory = JSON.parse(savedHistory)
+        setConversationHistory(parsedHistory)
+      } catch (error) {
+        console.error('Error loading conversation history:', error)
+      }
+    }
+
+    // Save conversation when component unmounts or user navigates away
+    const handleBeforeUnload = () => {
+      sessionStorage.setItem('askCentsMessages', JSON.stringify(messages))
+      sessionStorage.setItem('askCentsHistory', JSON.stringify(conversationHistory))
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    
+    // Cleanup function
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      // Save current state when component unmounts
+      sessionStorage.setItem('askCentsMessages', JSON.stringify(messages))
+      sessionStorage.setItem('askCentsHistory', JSON.stringify(conversationHistory))
+    }
+  }, [])
+
+  // Save messages and history whenever they change
+  useEffect(() => {
+    if (messages.length > 0) {
+      sessionStorage.setItem('askCentsMessages', JSON.stringify(messages))
+    }
+  }, [messages])
+
+  useEffect(() => {
+    if (conversationHistory.length > 0) {
+      sessionStorage.setItem('askCentsHistory', JSON.stringify(conversationHistory))
+    }
+  }, [conversationHistory])
 
   useEffect(() => {
     // Rotate suggestions every 3 seconds
@@ -57,30 +117,87 @@ const ChatTab = ({ user }) => {
     setMessage('')
     setIsTyping(true)
 
-    // Simulate AI response
-    setTimeout(() => {
+    // Add user message to conversation history
+    const newUserHistory = { role: 'user', content: messageText }
+    setConversationHistory(prev => [...prev, newUserHistory])
+
+    try {
+      // Get AI response from Google Generative AI with conversation context
+      const aiResponse = await getAIResponse(messageText, [...conversationHistory, newUserHistory])
+      
       const aiMessage = {
         id: Date.now() + 1,
-        text: getAIResponse(messageText),
+        text: aiResponse,
         sender: 'ai',
         timestamp: new Date(),
         suggestions: getFollowUpSuggestions(messageText)
       }
       setMessages(prev => [...prev, aiMessage])
+
+      // Add AI response to conversation history
+      const newAiHistory = { role: 'assistant', content: aiResponse }
+      setConversationHistory(prev => [...prev, newAiHistory])
+
+    } catch (error) {
+      console.error('Error getting AI response:', error)
+      const errorMessage = {
+        id: Date.now() + 1,
+        text: "Sorry, I'm having trouble connecting right now. Please try again in a moment.",
+        sender: 'ai',
+        timestamp: new Date()
+      }
+      setMessages(prev => [...prev, errorMessage])
+    } finally {
       setIsTyping(false)
-    }, 1500)
+    }
   }
 
-  const getAIResponse = (userMessage) => {
-    // Simulate different responses based on message content
-    if (userMessage.toLowerCase().includes('invest')) {
-      return "Great question! For students starting with $100, I'd recommend beginning with a low-cost index fund through a TFSA. This gives you diversification and tax-free growth. Would you like me to explain how TFSAs work or show you some beginner-friendly investment platforms?"
-    } else if (userMessage.toLowerCase().includes('credit card')) {
-      return "For students, I recommend looking for cards with no annual fee and good rewards on categories you spend in most (like groceries or gas). The TD Student Visa and Scotiabank SCENE Visa are popular choices. Building credit early is smart - just remember to pay the full balance each month!"
-    } else if (userMessage.toLowerCase().includes('rrsp') || userMessage.toLowerCase().includes('tfsa')) {
-      return "TFSA vs RRSP is a common question! As a student, TFSA is usually better because: 1) Withdrawals are tax-free 2) You can re-contribute withdrawn amounts 3) No impact on government benefits. RRSP is better when you're earning more and want the tax deduction now."
-    } else {
-      return "I'd be happy to help you with that! Let me break this down in a way that's easy to understand and give you some actionable steps you can take right away."
+  const getAIResponse = async (userMessage, currentHistory = conversationHistory) => {
+    try {
+      // Check if API key and model are available
+      if (!model || !apiKey) {
+        return "Hi! I'm AskCents, your financial advisor chatbot. To use my AI features, please add your Google AI API key to the .env file as VITE_GOOGLE_AI_API_KEY. In the meantime, I'd be happy to help with general financial guidance!"
+      }
+
+      // Build conversation context from history
+      let conversationContext = ""
+      if (currentHistory.length > 0) {
+        conversationContext = "\n\nConversation history:\n"
+        // Only include the last 10 exchanges to keep context manageable
+        const recentHistory = currentHistory.slice(-10)
+        recentHistory.forEach((msg, index) => {
+          const role = msg.role === 'user' ? 'User' : 'AskCents'
+          conversationContext += `${role}: ${msg.content}\n`
+        })
+        conversationContext += "\n"
+      }
+
+      // Create a financial advisor prompt context with conversation memory
+      const prompt = `You are AskCents, a friendly and knowledgeable financial advisor chatbot designed specifically for Canadian students and young adults. Your goal is to provide helpful, accurate, and easy-to-understand financial advice.
+
+Context:
+- User is a Canadian or American student/young adult
+- Focus on Canadian financial products (TFSA, RRSP, Canadian banks, etc.)
+- Keep responses conversational, helpful, and not too long
+- Keep responses under 100 words
+- Always be encouraging and supportive
+- Provide actionable advice when possible
+- Remember the conversation history and refer to previous topics when relevant
+- If the user asks follow-up questions, consider the previous context
+
+${conversationContext}
+
+Current user question: ${userMessage}
+
+Please provide a helpful response that's informative but easy to understand, taking into account our previous conversation:`
+
+      const result = await model.generateContent(prompt)
+      const response = await result.response
+      return response.text()
+    } catch (error) {
+      console.error('Error generating AI response:', error)
+      // Fallback to a helpful message
+      return "I'd be happy to help you with that financial question! Unfortunately, I'm having a technical issue right now. Could you try asking again? In the meantime, I'd recommend checking with your bank or a financial advisor for urgent questions."
     }
   }
 
@@ -119,6 +236,13 @@ const ChatTab = ({ user }) => {
     handleSendMessage(actionMessage)
   }
 
+  const clearConversation = () => {
+    setMessages([])
+    setConversationHistory([])
+    sessionStorage.removeItem('askCentsMessages')
+    sessionStorage.removeItem('askCentsHistory')
+  }
+
   return (
     <div className="chat-tab">
       {/* Header */}
@@ -128,8 +252,25 @@ const ChatTab = ({ user }) => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <h1>Hey {user.name} 👋</h1>
-          <p>What's on your mind?</p>
+          <div className="greeting-content">
+            <div>
+              <h1>Hey {user.name} 👋</h1>
+              <p>What's on your mind?</p>
+            </div>
+            {messages.length > 0 && (
+              <motion.button
+                className="clear-chat-btn"
+                onClick={clearConversation}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                title="Clear conversation"
+              >
+                <Trash2 size={18} />
+              </motion.button>
+            )}
+          </div>
         </motion.div>
       </div>
 
