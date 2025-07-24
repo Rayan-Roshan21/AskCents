@@ -19,7 +19,6 @@ const OnboardingFlow = ({ onComplete }) => {
   const goals = [
     { id: 'invest', label: 'Start investing', icon: TrendingUp, color: 'mint' },
     { id: 'save', label: 'Save smarter', icon: PiggyBank, color: 'navy' },
-    { id: 'credit', label: 'Build credit', icon: CreditCard, color: 'mint' },
     { id: 'learn', label: 'Understand money', icon: BookOpen, color: 'navy' }
   ]
 

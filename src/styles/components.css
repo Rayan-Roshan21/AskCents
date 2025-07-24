@@ -496,6 +496,7 @@
 .main-content {
   flex: 1;
   overflow-y: auto;
+  padding-top: 0; /* Remove any top padding that might push content up */
 }
 
 /* ===== CHAT TAB STYLES ===== */
@@ -503,7 +504,7 @@
 .chat-tab {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: calc(100vh - 110px); /* Account for mobile navigation */
   background: var(--gray-50);
 }
 
