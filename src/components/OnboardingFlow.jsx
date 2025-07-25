@@ -7,7 +7,6 @@ import { createLinkToken, exchangePublicToken, getAccounts } from '../services/p
 const OnboardingFlow = ({ onComplete }) => {
   const [currentStep, setCurrentStep] = useState(0)
   const [selectedGoal, setSelectedGoal] = useState('')
-  const [userEmail, setUserEmail] = useState('')
   const [linkBank, setLinkBank] = useState(false)
   const [isLinkingBank, setIsLinkingBank] = useState(false)
   const [plaidResult, setPlaidResult] = useState(null)
@@ -92,7 +91,6 @@ const OnboardingFlow = ({ onComplete }) => {
     'welcome',
     'goals',
     'bank',
-    'profile',
     'privacy'
   ]
 
@@ -120,7 +118,7 @@ const OnboardingFlow = ({ onComplete }) => {
       // Complete onboarding
       onComplete({
         name: 'Rayan', // Could be extracted from email or separate input
-        email: userEmail,
+        email: '', // No longer collected in onboarding
         goal: selectedGoal,
         bankLinked: linkBank && plaidResult?.success,
         plaidData: plaidResult // Include Plaid connection data
@@ -138,8 +136,6 @@ const OnboardingFlow = ({ onComplete }) => {
     switch (steps[currentStep]) {
       case 'goals':
         return selectedGoal !== ''
-      case 'profile':
-        return userEmail !== ''
       default:
         return true
     }
@@ -338,49 +334,6 @@ const OnboardingFlow = ({ onComplete }) => {
     </motion.div>
   )
 
-  const ProfileScreen = () => (
-    <motion.div className="onboarding-screen profile-screen">
-      <div className="screen-header">
-        <h2>Create your profile</h2>
-        <p>Just need your email to get started</p>
-      </div>
-      
-      <div className="profile-form">
-        <motion.div 
-          className="input-group"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <label htmlFor="email">Email address</label>
-          <input
-            id="email"
-            type="email"
-            value={userEmail}
-            onChange={(e) => setUserEmail(e.target.value)}
-            placeholder="your.email@student.ca"
-            className="email-input"
-          />
-        </motion.div>
-        
-        <motion.div 
-          className="login-options"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <div className="divider">
-            <span>or</span>
-          </div>
-          <button className="student-login-btn">
-            <BookOpen size={20} />
-            Continue with student login
-          </button>
-        </motion.div>
-      </div>
-    </motion.div>
-  )
-
   const PrivacyScreen = () => (
     <motion.div className="onboarding-screen privacy-screen">
       <div className="privacy-content">
@@ -445,8 +398,6 @@ const OnboardingFlow = ({ onComplete }) => {
         return <GoalsScreen />
       case 'bank':
         return <BankScreen />
-      case 'profile':
-        return <ProfileScreen />
       case 'privacy':
         return <PrivacyScreen />
       default:
