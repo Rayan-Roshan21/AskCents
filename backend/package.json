@@ -1,0 +1,29 @@
+{
+  "name": "askcents-backend",
+  "version": "1.0.0",
+  "description": "Backend API for AskCents with Plaid integration",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "moment": "^2.30.1",
+    "plaid": "^37.0.0",
+    "uuid": "^9.0.1"
+  },
+  "keywords": [
+    "plaid",
+    "fintech",
+    "api"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^9.2.0"
+  }
+}

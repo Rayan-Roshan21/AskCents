@@ -305,6 +305,129 @@
   color: white;
 }
 
+.bank-icon.loading {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.institution-selector {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-200);
+}
+
+.institution-selector label {
+  display: block;
+  font-weight: 500;
+  color: var(--gray-700);
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.institution-select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  background: white;
+  font-size: 0.875rem;
+  color: var(--gray-700);
+  cursor: pointer;
+}
+
+.institution-select:focus {
+  outline: none;
+  border-color: var(--mint-green);
+  box-shadow: 0 0 0 3px rgba(79, 209, 197, 0.1);
+}
+
+.sandbox-note {
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--gray-600);
+  background: var(--beige);
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--mint-green);
+}
+
+/* Backend status indicators */
+.backend-warning {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  margin-top: 8px;
+}
+
+.backend-status {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #16a34a;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  margin-top: 16px;
+  text-align: center;
+}
+
+.connection-success {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(79, 209, 197, 0.1);
+  border: 1px solid rgba(79, 209, 197, 0.3);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.success-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.success-content h4 {
+  margin: 0 0 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--navy-blue);
+}
+
+.success-content p {
+  margin: 0 0 0.25rem;
+  font-size: 0.75rem;
+  color: var(--gray-600);
+}
+
+.account-count {
+  font-size: 0.75rem;
+  color: var(--mint-green);
+  font-weight: 500;
+}
+
+.bank-option:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.bank-option:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.loading {
+  animation: spin 1s linear infinite;
+}
+
 .bank-content h3 {
   font-size: 1.125rem;
   font-weight: 600;

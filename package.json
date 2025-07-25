@@ -7,14 +7,18 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "backend": "cd backend && npm run dev",
+    "dev:full": "concurrently \"npm run backend\" \"npm run dev\""
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "framer-motion": "^12.23.7",
     "lucide-react": "^0.525.0",
+    "plaid": "^37.0.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "react-plaid-link": "^4.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",

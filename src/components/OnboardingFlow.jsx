@@ -1,12 +1,92 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronRight, ChevronLeft, TrendingUp, PiggyBank, CreditCard, BookOpen, Link, Shield, Check } from 'lucide-react'
+import { ChevronRight, ChevronLeft, TrendingUp, PiggyBank, CreditCard, BookOpen, Link, Shield, Check, Loader } from 'lucide-react'
+import { usePlaidLink } from 'react-plaid-link'
+import { createLinkToken, exchangePublicToken, getAccounts } from '../services/plaidService'
 
 const OnboardingFlow = ({ onComplete }) => {
   const [currentStep, setCurrentStep] = useState(0)
   const [selectedGoal, setSelectedGoal] = useState('')
   const [userEmail, setUserEmail] = useState('')
   const [linkBank, setLinkBank] = useState(false)
+  const [isLinkingBank, setIsLinkingBank] = useState(false)
+  const [plaidResult, setPlaidResult] = useState(null)
+  const [linkToken, setLinkToken] = useState(null)
+
+  // Get link token when component mounts
+  useEffect(() => {
+    const getLinkToken = async () => {
+      try {
+        const result = await createLinkToken()
+        if (result.success) {
+          setLinkToken(result.link_token)
+        } else {
+          console.error('Failed to create link token:', result.error)
+        }
+      } catch (error) {
+        console.error('Error creating link token:', error)
+      }
+    }
+    getLinkToken()
+  }, [])
+
+  // Auto-proceed to next step when bank linking is complete
+  useEffect(() => {
+    if (plaidResult?.success && steps[currentStep] === 'bank' && linkBank) {
+      // Small delay to show success state
+      setTimeout(() => {
+        if (currentStep < steps.length - 1) {
+          setCurrentStep(currentStep + 1)
+        }
+      }, 1500)
+    }
+  }, [plaidResult, currentStep, linkBank])
+
+  // Plaid Link configuration
+  const config = {
+    token: linkToken,
+    onSuccess: async (publicToken, metadata) => {
+      console.log('Plaid Link Success:', { publicToken, metadata })
+      setIsLinkingBank(true)
+      
+      try {
+        // Exchange public token for access token
+        const exchangeResult = await exchangePublicToken(publicToken)
+        if (exchangeResult.success) {
+          // Get account information
+          const accountsResult = await getAccounts()
+          if (accountsResult.success) {
+            setPlaidResult({
+              success: true,
+              accounts: accountsResult.accounts,
+              item: accountsResult.item,
+              institution: metadata.institution,
+              publicToken,
+              accessToken: exchangeResult.access_token
+            })
+            console.log('Bank successfully linked!')
+          } else {
+            console.error('Failed to get accounts:', accountsResult.error)
+          }
+        } else {
+          console.error('Failed to exchange token:', exchangeResult.error)
+        }
+      } catch (error) {
+        console.error('Error during bank linking:', error)
+      } finally {
+        setIsLinkingBank(false)
+      }
+    },
+    onExit: (err, metadata) => {
+      console.log('Plaid Link Exit:', { err, metadata })
+      setIsLinkingBank(false)
+    },
+    onEvent: (eventName, metadata) => {
+      console.log('Plaid Link Event:', { eventName, metadata })
+    }
+  }
+
+  const { open, ready } = usePlaidLink(config)
 
   const steps = [
     'welcome',
@@ -22,7 +102,18 @@ const OnboardingFlow = ({ onComplete }) => {
     { id: 'learn', label: 'Understand money', icon: BookOpen, color: 'navy' }
   ]
 
-  const nextStep = () => {
+  const nextStep = async () => {
+    // Handle bank linking before proceeding from bank step
+    if (steps[currentStep] === 'bank' && linkBank) {
+      if (ready) {
+        open() // Open Plaid Link
+        return // Don't proceed to next step until Plaid Link completes
+      } else {
+        console.error('Plaid Link not ready yet')
+        return
+      }
+    }
+
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1)
     } else {
@@ -31,7 +122,8 @@ const OnboardingFlow = ({ onComplete }) => {
         name: 'Rayan', // Could be extracted from email or separate input
         email: userEmail,
         goal: selectedGoal,
-        bankLinked: linkBank
+        bankLinked: linkBank && plaidResult?.success,
+        plaidData: plaidResult // Include Plaid connection data
       })
     }
   }
@@ -172,16 +264,23 @@ const OnboardingFlow = ({ onComplete }) => {
           onClick={() => setLinkBank(true)}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
+          disabled={isLinkingBank}
         >
           <div className="bank-icon-container">
-            <Link className="bank-icon" />
+            {isLinkingBank ? (
+              <Loader className="bank-icon loading" />
+            ) : (
+              <Link className="bank-icon" />
+            )}
           </div>
           <div className="bank-content">
-            <h3>Yes, link my bank</h3>
+            <h3>{isLinkingBank ? 'Connecting...' : 'Yes, link my bank'}</h3>
             <p>Powered by Plaid • Bank-level security</p>
-            <span className="bank-benefit">Get personalized spending insights</span>
+            <span className="bank-benefit">
+              {isLinkingBank ? 'Connecting to Plaid API...' : 'Get personalized spending insights'}
+            </span>
           </div>
-          {linkBank && (
+          {linkBank && !isLinkingBank && (
             <motion.div
               className="selection-indicator"
               layoutId="bankSelection"
@@ -191,12 +290,31 @@ const OnboardingFlow = ({ onComplete }) => {
             </motion.div>
           )}
         </motion.button>
+
+        {plaidResult && plaidResult.success && (
+          <motion.div
+            className="connection-success"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="success-icon">✅</div>
+            <div className="success-content">
+              <h4>Successfully Connected!</h4>
+              <p>Connected via Plaid API</p>
+              <span className="account-count">
+                {plaidResult.accounts?.length || 0} accounts found
+              </span>
+            </div>
+          </motion.div>
+        )}
         
         <motion.button
           className={`bank-option ${!linkBank ? 'selected' : ''}`}
           onClick={() => setLinkBank(false)}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
+          disabled={isLinkingBank}
         >
           <div className="bank-icon-container secondary">
             <BookOpen className="bank-icon" />
@@ -387,14 +505,23 @@ const OnboardingFlow = ({ onComplete }) => {
         )}
         
         <motion.button
-          className={`nav-btn primary ${!canProceed() ? 'disabled' : ''}`}
+          className={`nav-btn primary ${!canProceed() || isLinkingBank ? 'disabled' : ''}`}
           onClick={nextStep}
-          disabled={!canProceed()}
-          whileHover={canProceed() ? { scale: 1.05 } : {}}
-          whileTap={canProceed() ? { scale: 0.95 } : {}}
+          disabled={!canProceed() || isLinkingBank}
+          whileHover={canProceed() && !isLinkingBank ? { scale: 1.05 } : {}}
+          whileTap={canProceed() && !isLinkingBank ? { scale: 0.95 } : {}}
         >
-          {currentStep === steps.length - 1 ? 'Get started' : 'Continue'}
-          <ChevronRight size={20} />
+          {isLinkingBank ? (
+            <>
+              <Loader size={16} className="loading" />
+              Connecting...
+            </>
+          ) : (
+            <>
+              {currentStep === steps.length - 1 ? 'Get started' : 'Continue'}
+              <ChevronRight size={20} />
+            </>
+          )}
         </motion.button>
       </div>
     </div>
