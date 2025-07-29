@@ -137,7 +137,12 @@ const InsightsTab = () => {
     const annualInterestRate = 0.045 // 4.5% APY (typical high-yield savings)
     const monthlyInterestRate = annualInterestRate / 12
     
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const currentDate = new Date()
+    const months = []
+    for (let i = 0; i < 12; i++) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() + i)
+      months.push(date.toLocaleDateString('en-US', { month: 'short' }))
+    }
     let balance = currentBalance
     
     return months.map((month, index) => {
@@ -190,10 +195,6 @@ const InsightsTab = () => {
 
     const maxAmount = Math.max(...projectionData.map(point => point.amount))
 
-    // Display values for user reference
-    const defaultContribution = Math.round(currentSpendingData.totalBalance * 0.1) || 100
-    const defaultInterestRate = 4.5
-
   // Mock data for micro-investment potential
   const microInvestmentPotential = {
     coffeeSpend: 150,
@@ -218,7 +219,6 @@ const InsightsTab = () => {
         title: "Smart tip based on your spending",
         content: `Your biggest expense is ${topCategory.name} at $${topCategory.amount}. Consider setting a monthly budget of $${Math.round(topCategory.amount * 0.9)} to save $${Math.round(topCategory.amount * 0.1)}/month!`,
         icon: Lightbulb,
-        actionText: "Set Budget"
       }
     }
 
@@ -259,11 +259,6 @@ const InsightsTab = () => {
           <h1>My Money Snapshot</h1>
           <p>
             Your financial overview for this {timeRange}
-            {hasPlaidData ? (
-              <span className="data-source live"> • Live Data</span>
-            ) : (
-              <span className="data-source demo"> • Demo Data</span>
-            )}
           </p>
         </motion.div>
 
@@ -388,6 +383,10 @@ const InsightsTab = () => {
               </motion.div>
             ))}
           </div>
+          <div className="growth-projection">
+            <span className="projection-label">Projected growth over next 12 months:</span>
+            <span className="projection-value">{` Contribute ${Math.round(currentSpendingData.totalBalance * 0.1) || 100} monthly at 4.5% interest`}</span>
+          </div>
         </motion.div>
 
         {/* Micro-Investment Potential */}
@@ -484,14 +483,6 @@ const InsightsTab = () => {
               <h4>{dailyTip.title}</h4>
               <p>{dailyTip.content}</p>
             </div>
-            <motion.button 
-              className="tip-action"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {dailyTip.actionText}
-              <ChevronRight size={16} />
-            </motion.button>
           </div>
         </motion.div>
       </motion.div>

@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { User, Shield, Bell, CreditCard, HelpCircle, MessageSquare, LogOut, ChevronRight, Eye, EyeOff, Check } from 'lucide-react'
+import { useUser } from '../../contexts/UserContext'
 
 const SettingsTab = ({ user }) => {
+  const { clearUserData } = useUser()
   const [anonymousMode, setAnonymousMode] = useState(false)
   const [notifications, setNotifications] = useState({
     tips: true,
@@ -103,7 +105,8 @@ const SettingsTab = ({ user }) => {
   }
 
   const handleLogout = () => {
-    console.log('Logout user')
+    // Clear user data and return to login screen
+    clearUserData()
   }
 
   const containerVariants = {
