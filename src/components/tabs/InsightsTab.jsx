@@ -1,12 +1,102 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { TrendingUp, PieChart, DollarSign, Target, Coffee, Home, ShoppingBag, Car, Lightbulb, ChevronRight } from 'lucide-react'
+import { TrendingUp, PieChart, DollarSign, Target, Coffee, Home, ShoppingBag, Car, Lightbulb, ChevronRight, CreditCard } from 'lucide-react'
+import { useUser } from '../../contexts/UserContext'
 
-const InsightsTab = ({ user }) => {
+const InsightsTab = () => {
+  const { user, plaidData } = useUser()
   const [timeRange, setTimeRange] = useState('month')
-  
-  // Mock data - in real app this would come from bank integration
-  const spendingData = {
+  const [spendingData, setSpendingData] = useState(null)
+  const [financialHealth, setFinancialHealth] = useState(null)
+
+  // Process Plaid data when available
+  useEffect(() => {
+    if (plaidData && plaidData.accounts && plaidData.transactions) {
+      processPlaidData()
+    }
+  }, [plaidData, timeRange])
+
+  const processPlaidData = () => {
+    const accounts = plaidData.accounts || []
+    const transactions = plaidData.transactions || []
+    
+    // Calculate account balances
+    const totalBalance = accounts.reduce((sum, account) => {
+      return sum + (account.balances?.current || 0)
+    }, 0)
+
+    // Process transactions for spending insights
+    const categoryMap = {
+      'Food and Drink': { icon: Coffee, color: 'mint', name: 'Food & Dining' },
+      'Shops': { icon: ShoppingBag, color: 'beige', name: 'Shopping' },
+      'Transportation': { icon: Car, color: 'navy', name: 'Transportation' },
+      'Payment': { icon: Home, color: 'gray', name: 'Bills & Utilities' },
+      'Transfer': { icon: DollarSign, color: 'mint', name: 'Transfers' },
+      'Recreation': { icon: Coffee, color: 'beige', name: 'Entertainment' }
+    }
+
+    // Group transactions by category
+    const categorySpending = {}
+    let totalSpent = 0
+
+    transactions.forEach(transaction => {
+      if (transaction.amount > 0) { // Spending transactions
+        const category = transaction.category?.[0] || 'Other'
+        const categoryInfo = categoryMap[category] || { icon: DollarSign, color: 'gray', name: category }
+        
+        if (!categorySpending[category]) {
+          categorySpending[category] = {
+            name: categoryInfo.name,
+            amount: 0,
+            icon: categoryInfo.icon,
+            color: categoryInfo.color,
+            transactions: []
+          }
+        }
+        
+        categorySpending[category].amount += transaction.amount
+        categorySpending[category].transactions.push(transaction)
+        totalSpent += transaction.amount
+      }
+    })
+
+    // Convert to array and calculate percentages
+    const categories = Object.values(categorySpending)
+      .map(cat => ({
+        ...cat,
+        percentage: totalSpent > 0 ? Math.round((cat.amount / totalSpent) * 100) : 0,
+        trend: '+0%' // Could calculate based on historical data
+      }))
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 6) // Top 6 categories
+
+    setSpendingData({
+      categories,
+      totalSpent: Math.round(totalSpent),
+      totalBalance: Math.round(totalBalance),
+      accountCount: accounts.length,
+      transactionCount: transactions.length
+    })
+
+    // Calculate financial health score
+    const savingsRate = totalBalance > 0 ? Math.min(100, Math.round((totalBalance / Math.max(totalSpent, 1)) * 10)) : 0
+    const spendingControl = Math.max(0, 100 - Math.min(100, (totalSpent / Math.max(totalBalance, 1000)) * 50))
+    
+    setFinancialHealth({
+      score: Math.round((savingsRate + spendingControl) / 2),
+      status: savingsRate > 60 ? 'Good' : savingsRate > 30 ? 'Okay' : 'Needs Work',
+      color: savingsRate > 60 ? 'mint' : savingsRate > 30 ? 'beige' : 'gray',
+      factors: [
+        { name: 'Account Balance', score: Math.min(100, savingsRate), status: savingsRate > 60 ? 'Good' : 'Needs Work' },
+        { name: 'Spending Control', score: Math.round(spendingControl), status: spendingControl > 70 ? 'Good' : 'Okay' },
+        { name: 'Active Accounts', score: Math.min(100, accounts.length * 25), status: accounts.length >= 2 ? 'Good' : 'Okay' },
+        { name: 'Transaction Activity', score: Math.min(100, transactions.length), status: transactions.length > 10 ? 'Good' : 'Okay' }
+      ]
+    })
+  }
+
+  // Fallback to mock data if no Plaid data
+  const getMockData = () => ({
     categories: [
       { name: 'Food & Dining', amount: 450, percentage: 32, icon: Coffee, color: 'mint', trend: '+5%' },
       { name: 'Rent & Housing', amount: 800, percentage: 55, icon: Home, color: 'navy', trend: '0%' },
@@ -14,25 +104,12 @@ const InsightsTab = ({ user }) => {
       { name: 'Transportation', amount: 80, percentage: 5, icon: Car, color: 'mint', trend: '+2%' }
     ],
     totalSpent: 1450,
-    totalIncome: 1800,
-    savingsRate: 19.4
-  }
+    totalBalance: 1800,
+    accountCount: 2,
+    transactionCount: 45
+  })
 
-  const savingsGrowth = [
-    { month: 'Jan', amount: 200 },
-    { month: 'Feb', amount: 350 },
-    { month: 'Mar', amount: 480 },
-    { month: 'Apr', amount: 650 },
-    { month: 'May', amount: 820 }
-  ]
-
-  const microInvestmentPotential = {
-    coffeeSpend: 85,
-    potentialInvestment: 60,
-    projectedGrowth: 720 // annual
-  }
-
-  const financialHealth = {
+  const getMockHealthData = () => ({
     score: 68,
     status: 'Good',
     color: 'mint',
@@ -42,14 +119,58 @@ const InsightsTab = ({ user }) => {
       { name: 'Emergency Fund', score: 45, status: 'Needs Work' },
       { name: 'Debt Management', score: 85, status: 'Excellent' }
     ]
+  })
+
+  const currentSpendingData = spendingData || getMockData()
+  const currentHealthData = financialHealth || getMockHealthData()
+  const hasPlaidData = !!plaidData && !!spendingData
+
+  // Mock data for savings growth
+  const savingsGrowth = [
+    { month: 'Jan', amount: 500 },
+    { month: 'Feb', amount: 680 },
+    { month: 'Mar', amount: 750 },
+    { month: 'Apr', amount: 920 },
+    { month: 'May', amount: 1100 }
+  ]
+
+  // Mock data for micro-investment potential
+  const microInvestmentPotential = {
+    coffeeSpend: 150,
+    potentialInvestment: 120,
+    projectedGrowth: 1440
   }
 
-  const dailyTip = {
-    title: "Smart tip of the day",
-    content: "You spent $15 more on coffee this week than usual. Brewing at home 2 days could save you $120/year!",
-    icon: Lightbulb,
-    actionText: "Show me how"
+  // Generate dynamic tip based on real data
+  const getDynamicTip = () => {
+    if (!hasPlaidData) {
+      return {
+        title: "Connect your bank for personalized tips",
+        content: "Link your bank account to get AI-powered insights based on your real spending patterns!",
+        icon: Lightbulb,
+        actionText: "Connect Bank"
+      }
+    }
+
+    const topCategory = currentSpendingData.categories[0]
+    if (topCategory) {
+      return {
+        title: "Smart tip based on your spending",
+        content: `Your biggest expense is ${topCategory.name} at $${topCategory.amount}. Consider setting a monthly budget of $${Math.round(topCategory.amount * 0.9)} to save $${Math.round(topCategory.amount * 0.1)}/month!`,
+        icon: Lightbulb,
+        actionText: "Set Budget"
+      }
+    }
+
+    return {
+      title: "You're doing great!",
+      content: "Keep tracking your expenses and you'll reach your financial goals faster.",
+      icon: Lightbulb,
+      actionText: "Learn More"
+    }
   }
+
+  const dailyTip = getDynamicTip()
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -76,7 +197,14 @@ const InsightsTab = ({ user }) => {
           animate={{ opacity: 1, y: 0 }}
         >
           <h1>My Money Snapshot</h1>
-          <p>Your financial overview for this {timeRange}</p>
+          <p>
+            Your financial overview for this {timeRange}
+            {hasPlaidData ? (
+              <span className="data-source live"> • Live Data</span>
+            ) : (
+              <span className="data-source demo"> • Demo Data</span>
+            )}
+          </p>
         </motion.div>
 
         <div className="time-selector">
@@ -102,13 +230,13 @@ const InsightsTab = ({ user }) => {
       >
         {/* Quick Stats */}
         <motion.div className="stats-row" variants={itemVariants}>
-          <div className="stat-card income">
+          <div className="stat-card balance">
             <div className="stat-icon">
-              <TrendingUp />
+              <DollarSign />
             </div>
             <div className="stat-content">
-              <span className="stat-label">Income</span>
-              <span className="stat-value">${spendingData.totalIncome}</span>
+              <span className="stat-label">{hasPlaidData ? 'Total Balance' : 'Balance'}</span>
+              <span className="stat-value">${currentSpendingData.totalBalance?.toLocaleString() || '0'}</span>
             </div>
           </div>
           
@@ -118,30 +246,44 @@ const InsightsTab = ({ user }) => {
             </div>
             <div className="stat-content">
               <span className="stat-label">Spent</span>
-              <span className="stat-value">${spendingData.totalSpent}</span>
+              <span className="stat-value">${currentSpendingData.totalSpent?.toLocaleString() || '0'}</span>
             </div>
           </div>
           
-          <div className="stat-card savings">
+          <div className="stat-card accounts">
             <div className="stat-icon">
-              <Target />
+              <CreditCard />
             </div>
             <div className="stat-content">
-              <span className="stat-label">Saved</span>
-              <span className="stat-value">{spendingData.savingsRate}%</span>
+              <span className="stat-label">{hasPlaidData ? 'Accounts' : 'Connected'}</span>
+              <span className="stat-value">{currentSpendingData.accountCount || 0}</span>
             </div>
           </div>
+
+          {hasPlaidData && (
+            <div className="stat-card transactions">
+              <div className="stat-icon">
+                <TrendingUp />
+              </div>
+              <div className="stat-content">
+                <span className="stat-label">Transactions</span>
+                <span className="stat-value">{currentSpendingData.transactionCount || 0}</span>
+              </div>
+            </div>
+          )}
         </motion.div>
 
         {/* Spending Breakdown */}
         <motion.div className="insight-card spending-breakdown" variants={itemVariants}>
           <div className="card-header">
             <h3>Spending Breakdown</h3>
-            <span className="card-subtitle">Where your money went</span>
+            <span className="card-subtitle">
+              {hasPlaidData ? 'Where your money went' : 'Sample spending breakdown'}
+            </span>
           </div>
           
           <div className="categories-list">
-            {spendingData.categories.map((category, index) => (
+            {currentSpendingData.categories.map((category, index) => (
               <motion.div
                 key={category.name}
                 className="category-item"
@@ -248,17 +390,17 @@ const InsightsTab = ({ user }) => {
               <motion.div
                 className="score-progress"
                 initial={{ rotate: 0 }}
-                animate={{ rotate: (financialHealth.score / 100) * 360 }}
+                animate={{ rotate: (currentHealthData.score / 100) * 360 }}
                 transition={{ delay: 0.5, duration: 1 }}
               />
               <div className="score-content">
-                <span className="score-number">{financialHealth.score}</span>
-                <span className="score-status">{financialHealth.status}</span>
+                <span className="score-number">{currentHealthData.score}</span>
+                <span className="score-status">{currentHealthData.status}</span>
               </div>
             </div>
             
             <div className="health-factors">
-              {financialHealth.factors.map((factor, index) => (
+              {currentHealthData.factors.map((factor, index) => (
                 <motion.div
                   key={factor.name}
                   className="factor-item"
