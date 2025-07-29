@@ -25,27 +25,32 @@ const InsightsTab = () => {
       return sum + (account.balances?.current || 0)
     }, 0)
 
-    // Process transactions for spending insights
+    // Process transactions for spending insights using personal_finance_category
     const categoryMap = {
-      'Food and Drink': { icon: Coffee, color: 'mint', name: 'Food & Dining' },
-      'Shops': { icon: ShoppingBag, color: 'beige', name: 'Shopping' },
-      'Transportation': { icon: Car, color: 'navy', name: 'Transportation' },
-      'Payment': { icon: Home, color: 'gray', name: 'Bills & Utilities' },
-      'Transfer': { icon: DollarSign, color: 'mint', name: 'Transfers' },
-      'Recreation': { icon: Coffee, color: 'beige', name: 'Entertainment' }
+      'FOOD_AND_DRINK': { icon: Coffee, color: 'mint', name: 'Food & Dining' },
+      'GENERAL_MERCHANDISE': { icon: ShoppingBag, color: 'beige', name: 'Shopping' },
+      'TRANSPORTATION': { icon: Car, color: 'navy', name: 'Transportation' },
+      'RENT_AND_UTILITIES': { icon: Home, color: 'gray', name: 'Bills & Utilities' },
+      'TRANSFER_IN': { icon: DollarSign, color: 'mint', name: 'Transfers' },
+      'TRANSFER_OUT': { icon: DollarSign, color: 'mint', name: 'Transfers' },
+      'ENTERTAINMENT': { icon: Coffee, color: 'beige', name: 'Entertainment' },
+      'TRAVEL': { icon: Car, color: 'navy', name: 'Travel' },
+      'HEALTHCARE': { icon: Home, color: 'gray', name: 'Healthcare' },
+      'BANK_FEES': { icon: DollarSign, color: 'gray', name: 'Bank Fees' },
+      'PERSONAL_CARE': { icon: ShoppingBag, color: 'beige', name: 'Personal Care' }
     }
 
-    // Group transactions by category
+    // Group transactions by personal_finance_category
     const categorySpending = {}
     let totalSpent = 0
 
     transactions.forEach(transaction => {
       if (transaction.amount > 0) { // Spending transactions
-        const category = transaction.category?.[0] || 'Other'
-        const categoryInfo = categoryMap[category] || { icon: DollarSign, color: 'gray', name: category }
+        const primaryCategory = transaction.personal_finance_category?.primary || 'OTHER'
+        const categoryInfo = categoryMap[primaryCategory] || { icon: DollarSign, color: 'gray', name: primaryCategory.replace(/_/g, ' ') }
         
-        if (!categorySpending[category]) {
-          categorySpending[category] = {
+        if (!categorySpending[primaryCategory]) {
+          categorySpending[primaryCategory] = {
             name: categoryInfo.name,
             amount: 0,
             icon: categoryInfo.icon,
@@ -54,8 +59,8 @@ const InsightsTab = () => {
           }
         }
         
-        categorySpending[category].amount += transaction.amount
-        categorySpending[category].transactions.push(transaction)
+        categorySpending[primaryCategory].amount += transaction.amount
+        categorySpending[primaryCategory].transactions.push(transaction)
         totalSpent += transaction.amount
       }
     })
@@ -207,19 +212,6 @@ const InsightsTab = () => {
           </p>
         </motion.div>
 
-        <div className="time-selector">
-          {['week', 'month', 'year'].map((period) => (
-            <motion.button
-              key={period}
-              className={`time-btn ${timeRange === period ? 'active' : ''}`}
-              onClick={() => setTimeRange(period)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {period}
-            </motion.button>
-          ))}
-        </div>
       </div>
 
       <motion.div 
