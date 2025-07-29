@@ -60,47 +60,6 @@ const SettingsTab = ({ user }) => {
       ]
     },
     {
-      title: 'Notifications',
-      items: [
-        {
-          id: 'tips',
-          icon: Bell,
-          title: 'Daily Tips',
-          subtitle: 'Get personalized financial tips',
-          action: 'toggle',
-          value: notifications.tips,
-          onChange: (value) => setNotifications(prev => ({...prev, tips: value}))
-        },
-        {
-          id: 'goals',
-          icon: Bell,
-          title: 'Goal Updates',
-          subtitle: 'Progress and milestone notifications',
-          action: 'toggle',
-          value: notifications.goals,
-          onChange: (value) => setNotifications(prev => ({...prev, goals: value}))
-        },
-        {
-          id: 'spending',
-          icon: Bell,
-          title: 'Spending Alerts',
-          subtitle: 'Unusual spending notifications',
-          action: 'toggle',
-          value: notifications.spending,
-          onChange: (value) => setNotifications(prev => ({...prev, spending: value}))
-        },
-        {
-          id: 'offers',
-          icon: Bell,
-          title: 'New Offers',
-          subtitle: 'Student deals and partnerships',
-          action: 'toggle',
-          value: notifications.offers,
-          onChange: (value) => setNotifications(prev => ({...prev, offers: value}))
-        }
-      ]
-    },
-    {
       title: 'Subscription',
       items: [
         {

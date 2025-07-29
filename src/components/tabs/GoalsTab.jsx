@@ -11,7 +11,7 @@ const GoalsTab = ({ user }) => {
       id: 1,
       title: "Emergency Fund",
       description: "Build a $1,000 safety net",
-      progress: 65,
+      progress: 35,
       currentAmount: 650,
       targetAmount: 1000,
       deadline: "3 months",
