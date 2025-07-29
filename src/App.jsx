@@ -1,48 +1,83 @@
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import './App.css'
-
-// Import components
+import { useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import LoginScreen from './components/LoginScreen'
 import OnboardingFlow from './components/OnboardingFlow'
 import MainApp from './components/MainApp'
+import { UserProvider, useUser } from './contexts/UserContext'
+import './App.css'
+import './styles/components.css'
 
-function App() {
-  const [currentScreen, setCurrentScreen] = useState('onboarding')
-  const [user, setUser] = useState(null)
+function AppContent() {
+  const { user, isLoading, clearUserData } = useUser()
+  const [showOnboarding, setShowOnboarding] = useState(false)
+
+  if (isLoading) {
+    return (
+      <div className="loading-screen">
+        <motion.div
+          className="loading-spinner"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+        />
+        <p>Loading AskCents...</p>
+      </div>
+    )
+  }
+
+  // Temporary logout button for testing - you can remove this later
+  const handleLogout = () => {
+    clearUserData()
+    setShowOnboarding(false)
+  }
+
+  const handleLoginComplete = (userData) => {
+    if (!userData.onboardingCompleted) {
+      setShowOnboarding(true)
+    }
+  }
 
   const handleOnboardingComplete = (userData) => {
-    setUser(userData)
-    setCurrentScreen('main')
+    setShowOnboarding(false)
+  }
+
+  if (!user) {
+    return <LoginScreen onLoginComplete={handleLoginComplete} />
+  }
+
+  if (showOnboarding || !user.onboardingCompleted) {
+    return <OnboardingFlow onComplete={handleOnboardingComplete} />
   }
 
   return (
-    <div className="app">
-      <AnimatePresence mode="wait">
-        {currentScreen === 'onboarding' && (
-          <motion.div
-            key="onboarding"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <OnboardingFlow onComplete={handleOnboardingComplete} />
-          </motion.div>
-        )}
-        
-        {currentScreen === 'main' && user && (
-          <motion.div
-            key="main"
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -100 }}
-            transition={{ duration: 0.3 }}
-          >
-            <MainApp user={user} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <div>
+      {/* Temporary logout button - remove this after testing */}
+      <button 
+        onClick={handleLogout}
+        style={{
+          position: 'fixed',
+          top: '10px',
+          right: '10px',
+          zIndex: 1000,
+          padding: '8px 16px',
+          backgroundColor: '#dc2626',
+          color: 'white',
+          border: 'none',
+          borderRadius: '6px',
+          cursor: 'pointer'
+        }}
+      >
+        Logout (Test)
+      </button>
+      <MainApp user={user} />
     </div>
+  )
+}
+
+function App() {
+  return (
+    <UserProvider>
+      <AppContent />
+    </UserProvider>
   )
 }
 

@@ -1,218 +1,243 @@
 // Plaid Service for handling bank account linking via backend API
 // This service communicates with our Node.js backend that handles Plaid API calls securely
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 
-// Generate a unique user ID for this session
-const generateUserId = () => {
-  return 'user_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now()
-}
-
-// Store user ID in session storage
-const getUserId = () => {
-  let userId = sessionStorage.getItem('askcents_user_id')
-  if (!userId) {
-    userId = generateUserId()
-    sessionStorage.setItem('askcents_user_id', userId)
-  }
-  return userId
-}
-
-// API Functions
-
-// Create a link token for Plaid Link initialization
+// Create link token
 export const createLinkToken = async () => {
   try {
-    console.log('Creating link token with API URL:', API_BASE_URL)
+    console.log('🔗 Creating link token...')
     const response = await fetch(`${API_BASE_URL}/create_link_token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        user_id: getUserId()
-      })
     })
 
-    console.log('Response status:', response.status)
-    console.log('Response headers:', response.headers)
-
     if (!response.ok) {
-      const errorText = await response.text()
-      console.error('Failed to create link token - Response:', errorText)
-      throw new Error(`Failed to create link token: ${response.status} ${response.statusText}`)
+      throw new Error(`HTTP error! status: ${response.status}`)
     }
 
     const data = await response.json()
-    console.log('Link token created successfully:', data)
-    return {
-      success: true,
-      link_token: data.link_token,
-      expiration: data.expiration
-    }
+    console.log('✅ Link token created:', data.link_token)
+    return { success: true, ...data }
   } catch (error) {
-    console.error('Error creating link token:', error)
-    return {
-      success: false,
-      error: error.message
-    }
+    console.error('❌ Error creating link token:', error)
+    return { success: false, error: error.message }
   }
 }
 
 // Exchange public token for access token
 export const exchangePublicToken = async (publicToken) => {
   try {
+    console.log('🔄 Exchanging public token...')
     const response = await fetch(`${API_BASE_URL}/set_access_token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        public_token: publicToken,
-        user_id: getUserId()
-      })
+      body: JSON.stringify({ public_token: publicToken })
     })
 
     if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(`Failed to exchange token: ${errorData.error}`)
+      throw new Error(`Failed to exchange token: ${response.statusText}`)
     }
 
     const data = await response.json()
-    return {
-      success: true,
-      access_token: data.access_token,
-      item_id: data.item_id
-    }
+    console.log('✅ Token exchanged successfully')
+    return { success: true, ...data }
   } catch (error) {
-    console.error('Error exchanging public token:', error)
-    return {
-      success: false,
-      error: error.message
-    }
+    console.error('❌ Error exchanging public token:', error)
+    throw new Error(`Failed to exchange token: ${error.message}`)
   }
 }
 
-// Get user accounts
+// Get comprehensive user financial data
+export const getUserFinancialData = async () => {
+  try {
+    console.log('📊 Fetching comprehensive user data...')
+    
+    // Fetch all data in parallel
+    const [accounts, identity, transactions, balance] = await Promise.all([
+      getAccounts(),
+      getIdentity(),
+      getTransactions(),
+      getBalance()
+    ])
+
+    const financialData = {
+      accounts: accounts.accounts || [],
+      identity: identity.identity || [],
+      transactions: transactions.latest_transactions || [],
+      balances: balance.accounts || [],
+      totalBalance: calculateTotalBalance(balance.accounts || []),
+      spendingInsights: analyzeSpending(transactions.latest_transactions || []),
+      accountTypes: categorizeAccounts(accounts.accounts || []),
+      lastUpdated: new Date().toISOString()
+    }
+
+    console.log('✅ Financial data compiled:', financialData)
+    return { success: true, data: financialData }
+  } catch (error) {
+    console.error('❌ Error fetching user financial data:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+// Get accounts
 export const getAccounts = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/accounts`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('Failed to get accounts - Response:', errorText)
-      throw new Error(`Failed to get accounts: ${response.status} ${response.statusText}`)
-    }
-
-    const data = await response.json()
-    return {
-      success: true,
-      accounts: data.accounts,
-      item: data.item
-    }
+    const response = await fetch(`${API_BASE_URL}/accounts`)
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+    return await response.json()
   } catch (error) {
     console.error('Error getting accounts:', error)
-    return {
-      success: false,
-      error: error.message
-    }
+    throw error
   }
-
 }
 
-// Get user identity information
+// Get identity information
 export const getIdentity = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/identity`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('Failed to get identity - Response:', errorText)
-      throw new Error(`Failed to get identity: ${response.status} ${response.statusText}`)
-    }
-
-    const data = await response.json()
-    return {
-      success: true,
-      identity: data.identity,
-      accounts: data.accounts
-    }
+    const response = await fetch(`${API_BASE_URL}/identity`)
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+    return await response.json()
   } catch (error) {
     console.error('Error getting identity:', error)
-    return {
-      success: false,
-      error: error.message
-    }
+    throw error
   }
 }
 
-// Get user transactions
+// Get transactions
 export const getTransactions = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/transactions`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('Failed to get transactions - Response:', errorText)
-      throw new Error(`Failed to get transactions: ${response.status} ${response.statusText}`)
-    }
-
-    const data = await response.json()
-    return {
-      success: true,
-      transactions: data.latest_transactions || []
-    }
+    const response = await fetch(`${API_BASE_URL}/transactions`)
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+    return await response.json()
   } catch (error) {
     console.error('Error getting transactions:', error)
-    return {
-      success: false,
-      error: error.message
-    }
+    throw error
   }
 }
 
-// Remove/disconnect bank account
-export const removeItem = async () => {
+// Get account balances
+export const getBalance = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/item/remove`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        user_id: getUserId()
-      })
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(`Failed to remove item: ${errorData.error}`)
-    }
-
-    return {
-      success: true
-    }
+    const response = await fetch(`${API_BASE_URL}/balance`)
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+    return await response.json()
   } catch (error) {
-    console.error('Error removing item:', error)
-    return {
-      success: false,
-      error: error.message
+    console.error('Error getting balance:', error)
+    throw error
+  }
+}
+
+// Helper functions for data analysis
+const calculateTotalBalance = (accounts) => {
+  return accounts.reduce((total, account) => {
+    const balance = account.balances?.current || 0
+    // Only add positive balances (assets), subtract debts (credit cards, loans)
+    if (account.type === 'credit' || account.subtype === 'credit card') {
+      return total - balance
     }
+    return total + balance
+  }, 0)
+}
+
+const analyzeSpending = (transactions) => {
+  const last30Days = transactions.filter(t => {
+    const transactionDate = new Date(t.date)
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+    return transactionDate >= thirtyDaysAgo && t.amount > 0
+  })
+
+  const categorySpending = {}
+  let totalSpent = 0
+
+  last30Days.forEach(transaction => {
+    const category = transaction.category?.[0] || 'Other'
+    categorySpending[category] = (categorySpending[category] || 0) + transaction.amount
+    totalSpent += transaction.amount
+  })
+
+  const topCategories = Object.entries(categorySpending)
+    .sort(([,a], [,b]) => b - a)
+    .slice(0, 5)
+    .map(([category, amount]) => ({
+      category,
+      amount,
+      percentage: ((amount / totalSpent) * 100).toFixed(1)
+    }))
+
+  return {
+    totalSpent,
+    transactionCount: last30Days.length,
+    topCategories,
+    averageTransaction: totalSpent / last30Days.length || 0
+  }
+}
+
+const categorizeAccounts = (accounts) => {
+  const types = {
+    checking: [],
+    savings: [],
+    credit: [],
+    investment: [],
+    loan: [],
+    other: []
+  }
+
+  accounts.forEach(account => {
+    const type = account.subtype || account.type
+    switch (type) {
+      case 'checking':
+        types.checking.push(account)
+        break
+      case 'savings':
+        types.savings.push(account)
+        break
+      case 'credit card':
+      case 'credit':
+        types.credit.push(account)
+        break
+      case 'investment':
+      case 'brokerage':
+        types.investment.push(account)
+        break
+      case 'student':
+      case 'mortgage':
+      case 'auto':
+        types.loan.push(account)
+        break
+      default:
+        types.other.push(account)
+    }
+  })
+
+  return types
+}
+
+// Extract user profile from Plaid identity data
+export const extractUserProfile = (identityData) => {
+  if (!identityData || !identityData.length) return null
+
+  const primaryAccount = identityData[0]
+  const owner = primaryAccount.owners?.[0]
+
+  if (!owner) return null
+
+  return {
+    name: owner.names?.[0] || '',
+    email: owner.emails?.[0]?.data || '',
+    phone: owner.phone_numbers?.[0]?.data || '',
+    address: owner.addresses?.[0] ? {
+      street: owner.addresses[0].data.street,
+      city: owner.addresses[0].data.city,
+      region: owner.addresses[0].data.region,
+      postal_code: owner.addresses[0].data.postal_code,
+      country: owner.addresses[0].data.country
+    } : null
   }
 }
 
