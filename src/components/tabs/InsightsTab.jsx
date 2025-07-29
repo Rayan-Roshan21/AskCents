@@ -130,14 +130,69 @@ const InsightsTab = () => {
   const currentHealthData = financialHealth || getMockHealthData()
   const hasPlaidData = !!plaidData && !!spendingData
 
-  // Mock data for savings growth
-  const savingsGrowth = [
-    { month: 'Jan', amount: 500 },
-    { month: 'Feb', amount: 680 },
-    { month: 'Mar', amount: 750 },
-    { month: 'Apr', amount: 920 },
-    { month: 'May', amount: 1100 }
-  ]
+  // Generate savings growth projection based on current balance and interest rate
+  const generateSavingsProjection = () => {
+    const currentBalance = currentSpendingData.totalBalance || 1000
+    const monthlyContribution = Math.round(currentBalance * 0.1) // 10% of current balance as monthly contribution
+    const annualInterestRate = 0.045 // 4.5% APY (typical high-yield savings)
+    const monthlyInterestRate = annualInterestRate / 12
+    
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    let balance = currentBalance
+    
+    return months.map((month, index) => {
+      if (index > 0) {
+      // Add monthly contribution and compound interest
+      balance = (balance + monthlyContribution) * (1 + monthlyInterestRate)
+      }
+      return {
+      month,
+      amount: Math.round(balance),
+      contribution: index === 0 ? 0 : monthlyContribution,
+      interest: index === 0 ? 0 : Math.round(balance * monthlyInterestRate)
+      }
+    })
+    }
+
+    const savingsGrowth = generateSavingsProjection()
+    
+    // Savings simulator state
+    const [simulatorData, setSimulatorData] = useState({
+    monthlyContribution: 200,
+    interestRate: 4.5,
+    timeframe: 12
+    })
+
+    const calculateProjectedGrowth = (contribution, rate, months) => {
+    const currentBalance = currentSpendingData.totalBalance || 1000
+    const monthlyRate = rate / 100 / 12
+    let balance = currentBalance
+    const projectionData = []
+    
+    for (let i = 0; i <= months; i++) {
+      if (i > 0) {
+      balance = (balance + contribution) * (1 + monthlyRate)
+      }
+      projectionData.push({
+      month: i,
+      amount: Math.round(balance)
+      })
+    }
+    
+    return projectionData
+    }
+
+    const projectionData = calculateProjectedGrowth(
+    simulatorData.monthlyContribution,
+    simulatorData.interestRate,
+    simulatorData.timeframe
+    )
+
+    const maxAmount = Math.max(...projectionData.map(point => point.amount))
+
+    // Display values for user reference
+    const defaultContribution = Math.round(currentSpendingData.totalBalance * 0.1) || 100
+    const defaultInterestRate = 4.5
 
   // Mock data for micro-investment potential
   const microInvestmentPotential = {
@@ -374,7 +429,8 @@ const InsightsTab = () => {
         <motion.div className="insight-card financial-health" variants={itemVariants}>
           <div className="card-header">
             <h3>Financial Health</h3>
-            <span className="card-subtitle">You're on track!</span>
+            <span className="card-subtitle">Your overall financial wellness</span>
+
           </div>
           
           <div className="health-score">
