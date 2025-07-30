@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { TrendingUp, PieChart, DollarSign, Target, Coffee, Home, ShoppingBag, Car, Lightbulb, ChevronRight, CreditCard, Building2, Wallet, Banknote, Landmark } from 'lucide-react'
+import { TrendingUp, PieChart, DollarSign, Target, Coffee, Home, ShoppingBag, Car, Lightbulb, ChevronRight, CreditCard } from 'lucide-react'
 import { useUser } from '../../contexts/UserContext'
 
 const InsightsTab = () => {
@@ -129,40 +129,6 @@ const InsightsTab = () => {
   const currentSpendingData = spendingData || getMockData()
   const currentHealthData = financialHealth || getMockHealthData()
   const hasPlaidData = !!plaidData && !!spendingData
-
-  // Get appropriate icon for account type
-  const getAccountIcon = (account) => {
-    const { type, subtype } = account
-    
-    if (type === 'depository') {
-      if (subtype === 'checking') return Wallet
-      if (subtype === 'savings') return Banknote
-      return Building2
-    }
-    
-    if (type === 'credit') return CreditCard
-    if (type === 'investment') return TrendingUp
-    if (type === 'loan') return Home
-    
-    return Landmark // Default bank icon
-  }
-
-  // Get account color based on type
-  const getAccountColor = (account) => {
-    const { type, subtype } = account
-    
-    if (type === 'depository') {
-      if (subtype === 'checking') return 'mint'
-      if (subtype === 'savings') return 'navy'
-      return 'beige'
-    }
-    
-    if (type === 'credit') return 'gray'
-    if (type === 'investment') return 'mint'
-    if (type === 'loan') return 'navy'
-    
-    return 'beige'
-  }
 
   // Generate savings growth projection based on current balance and interest rate
   const generateSavingsProjection = () => {
@@ -392,25 +358,13 @@ const InsightsTab = () => {
           
           <div className="stat-card accounts">
             <div className="stat-icon">
-              <Building2 />
+              <CreditCard />
             </div>
             <div className="stat-content">
               <span className="stat-label">{hasPlaidData ? 'Accounts' : 'Connected'}</span>
               <span className="stat-value">{currentSpendingData.accountCount || 0}</span>
             </div>
           </div>
-
-          {hasPlaidData && (
-            <div className="stat-card transactions">
-              <div className="stat-icon">
-                <TrendingUp />
-              </div>
-              <div className="stat-content">
-                <span className="stat-label">Transactions</span>
-                <span className="stat-value">{currentSpendingData.transactionCount || 0}</span>
-              </div>
-            </div>
-          )}
         </motion.div>
 
         {/* Spending Breakdown */}
@@ -459,51 +413,6 @@ const InsightsTab = () => {
           </div>
         </motion.div>
 
-        {/* Accounts Overview */}
-        {hasPlaidData && plaidData.accounts && (
-          <motion.div className="insight-card accounts-overview" variants={itemVariants}>
-            <div className="card-header">
-              <h3>Your Accounts</h3>
-              <span className="card-subtitle">Connected financial accounts</span>
-            </div>
-            
-            <div className="accounts-list">
-              {plaidData.accounts.map((account, index) => {
-                const AccountIcon = getAccountIcon(account)
-                const accountColor = getAccountColor(account)
-                const balance = account.balances?.current || 0
-                const accountName = account.name || `${account.subtype} Account`
-                
-                return (
-                  <motion.div
-                    key={account.account_id}
-                    className="account-item"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 + 0.3 }}
-                  >
-                    <div className={`account-icon ${accountColor}`}>
-                      <AccountIcon size={20} />
-                    </div>
-                    <div className="account-info">
-                      <span className="account-name">{accountName}</span>
-                      <span className="account-type">
-                        {account.subtype?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                      </span>
-                    </div>
-                    <div className="account-balance">
-                      <span className="balance">${Math.abs(balance).toLocaleString()}</span>
-                      {account.type === 'credit' && balance > 0 && (
-                        <span className="balance-note">Outstanding</span>
-                      )}
-                    </div>
-                  </motion.div>
-                )
-              })}
-            </div>
-          </motion.div>
-        )}
-
         {/* Savings Growth */}
         <motion.div className="insight-card savings-growth" variants={itemVariants}>
           <div className="card-header">
@@ -528,7 +437,7 @@ const InsightsTab = () => {
           </div>
           <div className="growth-projection">
             <span className="projection-label">Projected growth over next 12 months:</span>
-            <span className="projection-value">{` Contribute ${Math.round(currentSpendingData.totalBalance * 0.1) || 100} monthly at 4.5% interest`}</span>
+            <span className="projection-value">{` Contribute $${Math.round(currentSpendingData.totalBalance * 0.1) || 100} monthly at 4.5% interest`}</span>
           </div>
         </motion.div>
 
