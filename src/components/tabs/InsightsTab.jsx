@@ -195,12 +195,62 @@ const InsightsTab = () => {
 
     const maxAmount = Math.max(...projectionData.map(point => point.amount))
 
-  // Mock data for micro-investment potential
-  const microInvestmentPotential = {
-    coffeeSpend: 150,
-    potentialInvestment: 120,
-    projectedGrowth: 1440
+  // Calculate micro-investment potential from real transactions
+  const calculateMicroInvestmentPotential = () => {
+    if (!hasPlaidData || !currentSpendingData.categories.length) {
+      return {
+        coffeeSpend: 150,
+        potentialInvestment: 120,
+        projectedGrowth: 1440,
+        targetCategory: 'Coffee & Dining',
+        isRealData: false
+      }
+    }
+
+    // Find spending patterns suitable for micro-investing
+    const targetCategories = ['FOOD_AND_DRINK', 'ENTERTAINMENT', 'GENERAL_MERCHANDISE']
+    let totalTargetSpending = 0
+    let primaryCategory = null
+    let primaryAmount = 0
+
+    currentSpendingData.categories.forEach(category => {
+      // Check if category matches our target categories for micro-investing
+      const isTargetCategory = targetCategories.some(target => 
+        category.name.toLowerCase().includes(target.toLowerCase().replace('_', ' ')) ||
+        category.name.toLowerCase().includes('food') ||
+        category.name.toLowerCase().includes('coffee') ||
+        category.name.toLowerCase().includes('entertainment') ||
+        category.name.toLowerCase().includes('shopping')
+      )
+      
+      if (isTargetCategory) {
+        totalTargetSpending += category.amount
+        if (category.amount > primaryAmount) {
+          primaryAmount = category.amount
+          primaryCategory = category.name
+        }
+      }
+    })
+
+    // Calculate potential savings (10-20% reduction in discretionary spending)
+    const potentialReduction = Math.round(totalTargetSpending * 0.15) // 15% reduction
+    const monthlyInvestment = Math.max(potentialReduction, 25) // Minimum $25/month
+    
+    // Calculate projected annual growth at 7% return
+    const annualGrowth = Math.round(monthlyInvestment * 12 * 1.07) // Conservative 7% return
+    
+    return {
+      coffeeSpend: Math.round(primaryAmount || totalTargetSpending),
+      potentialInvestment: monthlyInvestment,
+      projectedGrowth: annualGrowth,
+      targetCategory: primaryCategory || 'Discretionary Spending',
+      totalDiscretionary: Math.round(totalTargetSpending),
+      isRealData: true,
+      savingsRate: Math.round((potentialReduction / totalTargetSpending) * 100) || 15
+    }
   }
+
+  const microInvestmentPotential = calculateMicroInvestmentPotential()
 
   // Generate dynamic tip based on real data
   const getDynamicTip = () => {
@@ -214,11 +264,25 @@ const InsightsTab = () => {
     }
 
     const topCategory = currentSpendingData.categories[0]
+    const microData = microInvestmentPotential
+    
+    // Prioritize micro-investing tips if there's good potential
+    if (microData.isRealData && microData.potentialInvestment >= 50) {
+      return {
+        title: "💰 Micro-investing opportunity detected!",
+        content: `You spend $${microData.coffeeSpend}/month on ${microData.targetCategory.toLowerCase()}. By cutting just ${microData.savingsRate}%, you could invest $${microData.potentialInvestment}/month and potentially grow it to $${microData.projectedGrowth} annually!`,
+        icon: TrendingUp,
+        actionText: "Start Investing"
+      }
+    }
+    
+    // Budget optimization tip
     if (topCategory) {
       return {
         title: "Smart tip based on your spending",
         content: `Your biggest expense is ${topCategory.name} at $${topCategory.amount}. Consider setting a monthly budget of $${Math.round(topCategory.amount * 0.9)} to save $${Math.round(topCategory.amount * 0.1)}/month!`,
         icon: Lightbulb,
+        actionText: "Set Budget"
       }
     }
 
@@ -393,34 +457,62 @@ const InsightsTab = () => {
         <motion.div className="insight-card micro-investment" variants={itemVariants}>
           <div className="card-header">
             <h3>Micro-Investment Potential</h3>
-            <span className="card-subtitle">Small changes, big impact</span>
+            <span className="card-subtitle">
+              {microInvestmentPotential.isRealData 
+                ? 'Based on your spending patterns' 
+                : 'Small changes, big impact'}
+            </span>
           </div>
           
           <div className="investment-content">
             <div className="investment-visual">
               <div className="coffee-spend">
                 <Coffee className="coffee-icon" />
-                <span>Monthly coffee: ${microInvestmentPotential.coffeeSpend}</span>
+                <div className="spend-details">
+                  <span className="category-name">{microInvestmentPotential.targetCategory}</span>
+                  <span className="amount">${microInvestmentPotential.coffeeSpend}/month</span>
+                </div>
               </div>
               <ChevronRight className="arrow" />
               <div className="potential-investment">
                 <TrendingUp className="invest-icon" />
-                <span>Could invest: ${microInvestmentPotential.potentialInvestment}</span>
+                <div className="invest-details">
+                  <span className="invest-label">Could invest</span>
+                  <span className="invest-amount">${microInvestmentPotential.potentialInvestment}/month</span>
+                </div>
               </div>
             </div>
             
+            {microInvestmentPotential.isRealData && (
+              <div className="investment-breakdown">
+                <div className="breakdown-item">
+                  <span className="label">Total discretionary spending:</span>
+                  <span className="value">${microInvestmentPotential.totalDiscretionary}</span>
+                </div>
+                <div className="breakdown-item">
+                  <span className="label">Potential savings rate:</span>
+                  <span className="value">{microInvestmentPotential.savingsRate}%</span>
+                </div>
+              </div>
+            )}
+            
             <div className="projection">
-              <span className="projection-label">Potential annual growth:</span>
+              <span className="projection-label">Potential annual growth (7% return):</span>
               <span className="projection-value">${microInvestmentPotential.projectedGrowth}</span>
             </div>
             
-            <motion.button 
-              className="btn btn-mint"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              Start micro-investing
-            </motion.button>
+            <div className="investment-tips">
+              {microInvestmentPotential.isRealData ? (
+                <p className="tip-text">
+                  💡 By reducing your {microInvestmentPotential.targetCategory.toLowerCase()} spending by just {microInvestmentPotential.savingsRate}%, 
+                  you could invest ${microInvestmentPotential.potentialInvestment} monthly and potentially grow it to ${microInvestmentPotential.projectedGrowth} in a year!
+                </p>
+              ) : (
+                <p className="tip-text">
+                  💡 Connect your bank account to see personalized micro-investing opportunities based on your actual spending!
+                </p>
+              )}
+            </div>
           </div>
         </motion.div>
 

@@ -409,23 +409,6 @@ const ChatTab = ({ user }) => {
         </AnimatePresence>
       </div>
 
-      {/* Bank Link CTA */}
-      {!user.bankLinked && (
-        <motion.div 
-          className="bank-cta"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <Link className="bank-cta-icon" />
-          <div className="bank-cta-content">
-            <span className="bank-cta-title">Get personalized insights</span>
-            <span className="bank-cta-subtitle">Link your bank → See your habits</span>
-          </div>
-          <button className="bank-cta-btn">Connect</button>
-        </motion.div>
-      )}
-
       {/* Input */}
       <div className="chat-input-container">
         <div className="chat-input">
