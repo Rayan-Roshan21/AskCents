@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { TrendingUp, PieChart, DollarSign, Target, Coffee, Home, ShoppingBag, Car, Lightbulb, ChevronRight, CreditCard } from 'lucide-react'
+import { TrendingUp, PieChart, DollarSign, Target, Coffee, Home, ShoppingBag, Car, Lightbulb, ChevronRight, CreditCard, Building2, Wallet, Banknote, Landmark } from 'lucide-react'
 import { useUser } from '../../contexts/UserContext'
 
 const InsightsTab = () => {
@@ -129,6 +129,40 @@ const InsightsTab = () => {
   const currentSpendingData = spendingData || getMockData()
   const currentHealthData = financialHealth || getMockHealthData()
   const hasPlaidData = !!plaidData && !!spendingData
+
+  // Get appropriate icon for account type
+  const getAccountIcon = (account) => {
+    const { type, subtype } = account
+    
+    if (type === 'depository') {
+      if (subtype === 'checking') return Wallet
+      if (subtype === 'savings') return Banknote
+      return Building2
+    }
+    
+    if (type === 'credit') return CreditCard
+    if (type === 'investment') return TrendingUp
+    if (type === 'loan') return Home
+    
+    return Landmark // Default bank icon
+  }
+
+  // Get account color based on type
+  const getAccountColor = (account) => {
+    const { type, subtype } = account
+    
+    if (type === 'depository') {
+      if (subtype === 'checking') return 'mint'
+      if (subtype === 'savings') return 'navy'
+      return 'beige'
+    }
+    
+    if (type === 'credit') return 'gray'
+    if (type === 'investment') return 'mint'
+    if (type === 'loan') return 'navy'
+    
+    return 'beige'
+  }
 
   // Generate savings growth projection based on current balance and interest rate
   const generateSavingsProjection = () => {
@@ -358,7 +392,7 @@ const InsightsTab = () => {
           
           <div className="stat-card accounts">
             <div className="stat-icon">
-              <CreditCard />
+              <Building2 />
             </div>
             <div className="stat-content">
               <span className="stat-label">{hasPlaidData ? 'Accounts' : 'Connected'}</span>
@@ -425,6 +459,51 @@ const InsightsTab = () => {
           </div>
         </motion.div>
 
+        {/* Accounts Overview */}
+        {hasPlaidData && plaidData.accounts && (
+          <motion.div className="insight-card accounts-overview" variants={itemVariants}>
+            <div className="card-header">
+              <h3>Your Accounts</h3>
+              <span className="card-subtitle">Connected financial accounts</span>
+            </div>
+            
+            <div className="accounts-list">
+              {plaidData.accounts.map((account, index) => {
+                const AccountIcon = getAccountIcon(account)
+                const accountColor = getAccountColor(account)
+                const balance = account.balances?.current || 0
+                const accountName = account.name || `${account.subtype} Account`
+                
+                return (
+                  <motion.div
+                    key={account.account_id}
+                    className="account-item"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 + 0.3 }}
+                  >
+                    <div className={`account-icon ${accountColor}`}>
+                      <AccountIcon size={20} />
+                    </div>
+                    <div className="account-info">
+                      <span className="account-name">{accountName}</span>
+                      <span className="account-type">
+                        {account.subtype?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      </span>
+                    </div>
+                    <div className="account-balance">
+                      <span className="balance">${Math.abs(balance).toLocaleString()}</span>
+                      {account.type === 'credit' && balance > 0 && (
+                        <span className="balance-note">Outstanding</span>
+                      )}
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </div>
+          </motion.div>
+        )}
+
         {/* Savings Growth */}
         <motion.div className="insight-card savings-growth" variants={itemVariants}>
           <div className="card-header">
@@ -459,40 +538,40 @@ const InsightsTab = () => {
             <h3>Micro-Investment Potential</h3>
             <span className="card-subtitle">
               {microInvestmentPotential.isRealData 
-                ? 'Based on your spending patterns' 
-                : 'Small changes, big impact'}
+          ? 'Based on your spending patterns' 
+          : 'Small changes, big impact'}
             </span>
           </div>
           
           <div className="investment-content">
             <div className="investment-visual">
               <div className="coffee-spend">
-                <Coffee className="coffee-icon" />
-                <div className="spend-details">
-                  <span className="category-name">{microInvestmentPotential.targetCategory}</span>
-                  <span className="amount">${microInvestmentPotential.coffeeSpend}/month</span>
-                </div>
+          <DollarSign className="coffee-icon" />
+          <div className="spend-details">
+            <span className="category-name">{microInvestmentPotential.targetCategory}</span>
+            <span className="amount">${microInvestmentPotential.coffeeSpend}/month</span>
+          </div>
               </div>
               <ChevronRight className="arrow" />
               <div className="potential-investment">
-                <TrendingUp className="invest-icon" />
-                <div className="invest-details">
-                  <span className="invest-label">Could invest</span>
-                  <span className="invest-amount">${microInvestmentPotential.potentialInvestment}/month</span>
-                </div>
+          <TrendingUp className="invest-icon" />
+          <div className="invest-details">
+            <span className="invest-label">Could invest</span>
+            <span className="invest-amount">${microInvestmentPotential.potentialInvestment}/month</span>
+          </div>
               </div>
             </div>
             
             {microInvestmentPotential.isRealData && (
               <div className="investment-breakdown">
-                <div className="breakdown-item">
-                  <span className="label">Total discretionary spending:</span>
-                  <span className="value">${microInvestmentPotential.totalDiscretionary}</span>
-                </div>
-                <div className="breakdown-item">
-                  <span className="label">Potential savings rate:</span>
-                  <span className="value">{microInvestmentPotential.savingsRate}%</span>
-                </div>
+          <div className="breakdown-item">
+            <span className="label">Total discretionary spending:</span>
+            <span className="value">${microInvestmentPotential.totalDiscretionary}</span>
+          </div>
+          <div className="breakdown-item">
+            <span className="label">Potential savings rate:</span>
+            <span className="value">{microInvestmentPotential.savingsRate}%</span>
+          </div>
               </div>
             )}
             
@@ -503,14 +582,14 @@ const InsightsTab = () => {
             
             <div className="investment-tips">
               {microInvestmentPotential.isRealData ? (
-                <p className="tip-text">
-                  💡 By reducing your {microInvestmentPotential.targetCategory.toLowerCase()} spending by just {microInvestmentPotential.savingsRate}%, 
-                  you could invest ${microInvestmentPotential.potentialInvestment} monthly and potentially grow it to ${microInvestmentPotential.projectedGrowth} in a year!
-                </p>
+          <p className="tip-text">
+            💡 By reducing your {microInvestmentPotential.targetCategory.toLowerCase()} spending by just {microInvestmentPotential.savingsRate}%, 
+            you could invest ${microInvestmentPotential.potentialInvestment} monthly and potentially grow it to ${microInvestmentPotential.projectedGrowth} in a year!
+          </p>
               ) : (
-                <p className="tip-text">
-                  💡 Connect your bank account to see personalized micro-investing opportunities based on your actual spending!
-                </p>
+          <p className="tip-text">
+            💡 Connect your bank account to see personalized micro-investing opportunities based on your actual spending!
+          </p>
               )}
             </div>
           </div>
