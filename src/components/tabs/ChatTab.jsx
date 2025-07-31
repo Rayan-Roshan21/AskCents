@@ -12,7 +12,7 @@ const ChatTab = ({ user }) => {
   const messagesEndRef = useRef(null)
 
   // Initialize Google AI (you'll need to set your API key)
-  const apiKey = import.meta.env.VITE_GOOGLE_AI_API_KEY
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY
   const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null
   const model = genAI ? genAI.getGenerativeModel({ model: "gemini-2.5-flash" }) : null
 

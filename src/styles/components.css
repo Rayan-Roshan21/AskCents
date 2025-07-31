@@ -3445,6 +3445,215 @@
 
 /* ===== GOALS TAB MODAL AND EMPTY STATE STYLES ===== */
 
+/* Weekly Guidance Enhancements */
+.guidance-header-section {
+  margin-bottom: 1.5rem;
+}
+
+.guidance-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.ai-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+.loading-advice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3rem 2rem;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 16px;
+  border: 2px solid rgba(120, 119, 198, 0.2);
+}
+
+.loading-spinner {
+  margin-bottom: 1rem;
+}
+
+.spinning {
+  animation: spin 1.5s linear infinite;
+  color: #667eea;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.loading-advice p {
+  color: #718096;
+  font-style: italic;
+}
+
+/* Enhanced Task Items */
+.task-item {
+  position: relative;
+  border-left: 3px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.task-item.spending {
+  border-left-color: #ff6b6b;
+}
+
+.task-item.saving {
+  border-left-color: #51cf66;
+}
+
+.task-item.budgeting {
+  border-left-color: #4dabf7;
+}
+
+.task-item.optimization {
+  border-left-color: #ffd43b;
+}
+
+.task-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.task-category {
+  background: rgba(120, 119, 198, 0.1);
+  color: #667eea;
+  padding: 0.2rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.advice-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(120, 119, 198, 0.1);
+}
+
+.advice-timestamp {
+  font-size: 0.8rem;
+  color: #718096;
+  font-style: italic;
+}
+
+.refresh-advice-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(120, 119, 198, 0.1);
+  color: #667eea;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.refresh-advice-btn:hover {
+  background: rgba(120, 119, 198, 0.2);
+  transform: translateY(-1px);
+}
+
+.refresh-advice-btn svg {
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.1) rotate(5deg); }
+}
+
+/* Error Message */
+.error-message {
+  background: rgba(255, 107, 107, 0.1);
+  border-left: 4px solid #ff6b6b;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  color: #c92a2a;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.error-message span {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* No Advice Message */
+.no-advice-message {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: rgba(120, 119, 198, 0.05);
+  border-radius: 16px;
+  border: 2px dashed rgba(120, 119, 198, 0.3);
+}
+
+.no-advice-icon {
+  color: rgba(120, 119, 198, 0.6);
+  margin-bottom: 1rem;
+}
+
+.no-advice-message h4 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 0.75rem;
+}
+
+.no-advice-message p {
+  color: #718096;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.connect-account-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.connect-account-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5);
+}
+
 /* Empty State */
 .empty-state {
   text-align: center;
@@ -3753,5 +3962,27 @@
   .btn-primary {
     width: 100%;
     justify-content: center;
+  }
+  
+  .guidance-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .ai-badge {
+    align-self: flex-start;
+  }
+  
+  .advice-footer {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+  
+  .task-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
   }
 }

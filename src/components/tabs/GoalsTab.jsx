@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Target, TrendingUp, CreditCard, GraduationCap, Lock, CheckCircle, Calendar, DollarSign, Zap } from 'lucide-react'
+import { Plus, Target, TrendingUp, CreditCard, GraduationCap, Lock, CheckCircle, Calendar, DollarSign, Zap, Brain, Sparkles } from 'lucide-react'
 import { useUser } from '../../contexts/UserContext'
 
 const GoalsTab = () => {
@@ -9,12 +9,298 @@ const GoalsTab = () => {
   const [selectedGoalType, setSelectedGoalType] = useState('')
   const [activeGoals, setActiveGoals] = useState([])
   const [weeklyGuidance, setWeeklyGuidance] = useState([])
+  const [isLoadingAdvice, setIsLoadingAdvice] = useState(false)
   const [newGoalData, setNewGoalData] = useState({
     title: '',
     targetAmount: '',
     deadline: '',
     description: ''
   })
+
+  // Generate weekly advice using Gemini AI
+  const generateWeeklyAdvice = async (transactions) => {
+    try {
+      setIsLoadingAdvice(true)
+      
+      // Check if we have cached advice for this week
+      const currentWeek = getCurrentWeekKey()
+      const cachedAdvice = localStorage.getItem(`weeklyAdvice_${currentWeek}`)
+      
+      if (cachedAdvice) {
+        const parsedAdvice = JSON.parse(cachedAdvice)
+        setWeeklyGuidance([{
+          week: "This Week",
+          tasks: parsedAdvice,
+          generatedAt: new Date().toISOString(),
+          isAIGenerated: true
+        }])
+        setIsLoadingAdvice(false)
+        return
+      }
+
+      // Prepare transaction data for Gemini
+      const transactionSummary = prepareTransactionData(transactions)
+      
+      // Call Gemini API
+      const advice = await callGeminiAPI(transactionSummary)
+      
+      // Cache the advice
+      localStorage.setItem(`weeklyAdvice_${currentWeek}`, JSON.stringify(advice))
+      
+      setWeeklyGuidance([{
+        week: "This Week",
+        tasks: advice,
+        generatedAt: new Date().toISOString(),
+        isAIGenerated: true
+      }])
+      
+    } catch (error) {
+      console.error('Error generating weekly advice:', error)
+      
+      // Provide specific error messages for different cases
+      let errorMessage = 'Unable to generate personalized advice at this time'
+      if (error.message === 'API key not configured') {
+        errorMessage = 'AI advice requires API key configuration'
+      } else if (error.message.includes('API returned')) {
+        errorMessage = 'AI service is temporarily unavailable'
+      }
+      
+      // Show error message instead of fallback advice
+      setWeeklyGuidance([{
+        week: "This Week",
+        tasks: [],
+        generatedAt: new Date().toISOString(),
+        isAIGenerated: false,
+        error: errorMessage,
+        noAdvice: true
+      }])
+    } finally {
+      setIsLoadingAdvice(false)
+    }
+  }
+
+  // Get current week key for caching
+  const getCurrentWeekKey = () => {
+    const now = new Date()
+    const startOfYear = new Date(now.getFullYear(), 0, 1)
+    const pastDaysOfYear = (now - startOfYear) / 86400000
+    const weekNumber = Math.ceil((pastDaysOfYear + startOfYear.getDay() + 1) / 7)
+    return `${now.getFullYear()}_W${weekNumber}`
+  }
+
+  // Prepare transaction data for Gemini
+  const prepareTransactionData = (transactions) => {
+    if (!transactions || transactions.length === 0) {
+      return "No recent transactions available."
+    }
+
+    // Get transactions from the last 30 days
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+    
+    const recentTransactions = transactions.filter(tx => 
+      new Date(tx.date) >= thirtyDaysAgo
+    )
+
+    // Categorize and summarize transactions
+    const categorySummary = {}
+    let totalSpent = 0
+    let incomeTotal = 0
+
+    recentTransactions.forEach(tx => {
+      const amount = Math.abs(tx.amount)
+      const category = tx.category ? tx.category[0] : 'Other'
+      
+      if (tx.amount < 0) { // Spending
+        totalSpent += amount
+        categorySummary[category] = (categorySummary[category] || 0) + amount
+      } else { // Income
+        incomeTotal += amount
+      }
+    })
+
+    // Get top 5 spending categories
+    const topCategories = Object.entries(categorySummary)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 5)
+      .map(([category, amount]) => ({
+        category,
+        amount: amount.toFixed(2),
+        percentage: ((amount / totalSpent) * 100).toFixed(1)
+      }))
+
+    return {
+      totalSpent: totalSpent.toFixed(2),
+      totalIncome: incomeTotal.toFixed(2),
+      netCashFlow: (incomeTotal - totalSpent).toFixed(2),
+      topSpendingCategories: topCategories,
+      transactionCount: recentTransactions.length,
+      timeframe: "Last 30 days"
+    }
+  }
+
+  // Call Gemini API
+  const callGeminiAPI = async (transactionSummary) => {
+    // Check if API key is available
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY
+    if (!apiKey) {
+      console.warn('Gemini API key not found. Please set VITE_GEMINI_API_KEY in your .env file')
+      throw new Error('API key not configured')
+    }
+
+    const prompt = `You are AskCents, a friendly and knowledgeable financial advisor chatbot designed specifically for Canadian students and young adults. Your goal is to provide helpful, accurate, and easy-to-understand financial advice.
+
+Context and Guidelines:
+- User is a Canadian or American student/young adult (age 16-30)
+- Prioritize Canadian financial products (TFSA, RRSP, OSAP, Canadian banks, etc.) but provide US alternatives when relevant
+- Keep responses conversational, helpful, and concise
+- Always be encouraging, supportive, and non-judgmental about financial situations
+- Provide specific, actionable advice with clear next steps
+- Use simple language and avoid complex financial jargon
+- Include relevant examples when helpful
+
+Special Considerations:
+- Emergency situations: If user mentions financial crisis, job loss, or urgent money needs, prioritize immediate practical solutions
+- Mental health: Be sensitive to financial stress and anxiety, offer reassurance and suggest professional help when appropriate
+- Different income levels: Adapt advice for students with no income, part-time workers, or recent graduates
+- Life stages: Consider if user is in high school, university, or early career
+- Risk tolerance: Assess user's comfort level with different financial products
+- Regional differences: Account for provincial differences in Canada (Quebec vs other provinces)
+- Currency context: Clarify CAD vs USD when discussing amounts
+- Legal and regulatory: Acknowledge limitations and suggest consulting licensed professionals for complex tax, legal, or investment advice
+- International students: Consider unique challenges like limited credit history, SIN requirements, and temporary status
+- Indigenous financial programs: Be aware of specific programs and considerations for Indigenous students
+- Accessibility: Consider users with disabilities who may have different financial needs or government support options
+- Family dynamics: Respect different family financial arrangements and cultural approaches to money
+- Entrepreneurship: Provide guidance for students starting businesses or side hustles
+- Technology and apps: Recommend legitimate Canadian financial apps and tools while warning about scams
+- Privacy and security: Emphasize the importance of financial privacy and security practices
+- Non-traditional situations: Handle questions about alternative living arrangements, gap years, international exchanges, etc.
+- Debt management: Provide compassionate guidance for various types of debt (student loans, credit cards, family debt)
+- Real estate: Discuss homeownership, renting, and housing costs relevant to young adults
+- Insurance needs: Address basic insurance requirements for young adults (health, auto, renters)
+
+FINANCIAL DATA ANALYSIS:
+Based on the following transaction analysis from the user's banking data (${transactionSummary.timeframe}):
+
+- Total Spent: $${transactionSummary.totalSpent}
+- Total Income: $${transactionSummary.totalIncome}
+- Net Cash Flow: $${transactionSummary.netCashFlow}
+- Top Spending Categories: ${transactionSummary.topSpendingCategories.map(cat => `${cat.category}: $${cat.amount} (${cat.percentage}%)`).join(', ')}
+- Transaction Count: ${transactionSummary.transactionCount}
+
+TASK: Analyze this financial data and provide exactly 3 personalized financial advice tips formatted as actionable weekly tasks. Focus on practical actions that could help improve their financial situation based on the actual transaction patterns shown.
+
+IMPORTANT: Please respond with a JSON array of exactly 3 objects. Each object should contain:
+- id: a unique number (1, 2, 3)
+- text: the advice/task (keep it under 80 characters, actionable and specific)
+- completed: false
+- points: a number between 15-30 based on impact
+- category: one of "spending", "saving", "budgeting", "optimization"
+
+Focus on practical actions like reducing specific spending categories, increasing savings, or optimizing financial habits based on the actual transaction patterns shown. Make sure the advice is relevant to Canadian/American students and young adults.
+
+Example format:
+[
+  {
+    "id": 1,
+    "text": "Reduce dining out expenses by cooking 3 more meals at home this week",
+    "completed": false,
+    "points": 20,
+    "category": "spending"
+  },
+  {
+    "id": 2,
+    "text": "Set up automatic $50 weekly transfer to savings account",
+    "completed": false,
+    "points": 25,
+    "category": "saving"
+  },
+  {
+    "id": 3,
+    "text": "Review and cancel unused subscriptions to save money",
+    "completed": false,
+    "points": 20,
+    "category": "optimization"
+  }
+]`
+
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-latest:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: prompt
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 1000,
+          }
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.text()
+        console.error('Gemini API Error Response:', errorData)
+        throw new Error(`Gemini API returned ${response.status}: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      
+      if (!data.candidates || data.candidates.length === 0) {
+        console.error('No candidates in Gemini response:', data)
+        throw new Error('No response generated by Gemini')
+      }
+
+      const generatedText = data.candidates[0].content.parts[0].text
+      
+      // Parse the JSON response
+      try {
+        // Clean up the response to extract JSON
+        let jsonText = generatedText
+        
+        // Remove markdown code blocks if present
+        jsonText = jsonText.replace(/```json\n?/, '').replace(/```\n?/, '')
+        
+        // Find JSON array in the response
+        const jsonMatch = jsonText.match(/\[[\s\S]*\]/)
+        if (jsonMatch) {
+          jsonText = jsonMatch[0]
+        }
+        
+        const advice = JSON.parse(jsonText)
+        return Array.isArray(advice) && advice.length === 3 ? advice : []
+      } catch (parseError) {
+        console.error('Error parsing Gemini response:', parseError, 'Raw response:', generatedText)
+        return []
+      }
+    } catch (error) {
+      console.error('Error calling Gemini API:', error)
+      throw error
+    }
+  }
+
+  // Load weekly advice on component mount or when plaidData changes
+  useEffect(() => {
+    if (plaidData?.transactions) {
+      generateWeeklyAdvice(plaidData.transactions)
+    } else {
+      // Show message if no Plaid data
+      setWeeklyGuidance([{
+        week: "This Week",
+        tasks: [],
+        generatedAt: new Date().toISOString(),
+        isAIGenerated: false,
+        error: "Connect your bank account to get personalized financial advice",
+        noAdvice: true
+      }])
+    }
+  }, [plaidData])
 
   const goalTypes = [
     { id: 'savings', name: 'Save Money', icon: Target, description: 'Build an emergency fund or save for something special' },
@@ -169,6 +455,7 @@ const GoalsTab = () => {
         {/* Active Goals */}
         <motion.div className="goals-section" variants={itemVariants}>
           <h2>Your Goals</h2>
+          <p>Track your progress and stay motivated</p>
           {activeGoals.length === 0 ? (
             <div className="empty-state">
               <Target size={48} className="empty-icon" />
@@ -250,46 +537,127 @@ const GoalsTab = () => {
         </motion.div>
 
         {/* Weekly Guidance */}
-        {activeGoals.length > 0 && (
+        {weeklyGuidance.length > 0 && (
           <motion.div className="guidance-section" variants={itemVariants}>
-            <h2>Weekly Guidance</h2>
-            {weeklyGuidance.map((week, weekIndex) => (
-              <div key={week.week} className="guidance-card">
-                <div className="guidance-header">
-                  <h3>{week.week}</h3>
-                  <span className="tasks-count">
-                    {week.tasks.filter(t => t.completed).length}/{week.tasks.length} completed
-                  </span>
-                </div>
-                
-                <div className="tasks-list">
-                  {week.tasks.map((task, taskIndex) => (
-                    <motion.div
-                      key={task.id}
-                      className={`task-item ${task.completed ? 'completed' : ''}`}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: taskIndex * 0.1 + 0.4 }}
-                    >
-                      <motion.button
-                        className="task-checkbox"
-                        onClick={() => toggleTask(task.id)}
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                      >
-                        {task.completed && <CheckCircle size={16} />}
-                      </motion.button>
-                      
-                      <span className="task-text">{task.text}</span>
-                      
-                      <div className="task-points">
-                        <span>+{task.points} pts</span>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
+            <div className="guidance-header-section">
+              <div className="guidance-title">
+                <h2>Weekly Guidance</h2>
+                {weeklyGuidance[0]?.isAIGenerated && (
+                  <div className="ai-badge">
+                    <Brain size={16} />
+                    <span>AI Powered</span>
+                  </div>
+                )}
               </div>
-            ))}
+              <p>
+                {weeklyGuidance[0]?.isAIGenerated 
+                  ? "Personalized advice based on your recent spending patterns"
+                  : "Complete tasks to earn points and improve your financial habits"
+                }
+              </p>
+            </div>
+            
+            {isLoadingAdvice ? (
+              <div className="loading-advice">
+                <div className="loading-spinner">
+                  <Sparkles size={24} className="spinning" />
+                </div>
+                <p>Analyzing your transactions to generate personalized advice...</p>
+              </div>
+            ) : (
+              weeklyGuidance.map((week, weekIndex) => (
+                <div key={week.week} className="guidance-card">
+                  <div className="guidance-header">
+                    <h3>{week.week}</h3>
+                    <span className="tasks-count">
+                      {week.tasks.filter(t => t.completed).length}/{week.tasks.length} completed
+                    </span>
+                  </div>
+
+                  {week.error && (
+                    <div className="error-message">
+                      <span>⚠️ {week.error}</span>
+                    </div>
+                  )}
+
+                  {!week.noAdvice && week.tasks.length > 0 && (
+                    <div className="tasks-list">
+                      {week.tasks.map((task, taskIndex) => (
+                        <motion.div
+                          key={task.id}
+                          className={`task-item ${task.completed ? 'completed' : ''} ${task.category || ''}`}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: taskIndex * 0.1 + 0.4 }}
+                        >
+                          <motion.button
+                            className="task-checkbox"
+                            onClick={() => toggleTask(task.id)}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                          >
+                            {task.completed && <CheckCircle size={16} />}
+                          </motion.button>
+                          
+                          <span className="task-text">{task.text}</span>
+                          
+                          <div className="task-meta">
+                            {task.category && (
+                              <span className="task-category">{task.category}</span>
+                            )}
+                            <div className="task-points">
+                              <span>+{task.points} pts</span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+
+                  {week.noAdvice && (
+                    <div className="no-advice-message">
+                      <Brain size={48} className="no-advice-icon" />
+                      <h4>No Advice Available</h4>
+                      <p>
+                        {week.error.includes('bank account') 
+                          ? 'Connect your bank account to receive AI-powered financial insights and personalized weekly tasks.'
+                          : 'We\'re unable to generate personalized advice right now. Please try again later or check your connection.'
+                        }
+                      </p>
+                      {week.error.includes('bank account') && (
+                        <button className="connect-account-btn">
+                          Connect Bank Account
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  
+                  {week.generatedAt && (
+                    <div className="advice-footer">
+                      <span className="advice-timestamp">
+                        Generated {new Date(week.generatedAt).toLocaleDateString()}
+                      </span>
+                      {week.isAIGenerated && (
+                        <button 
+                          className="refresh-advice-btn"
+                          onClick={() => {
+                            // Clear cache and regenerate
+                            const currentWeek = getCurrentWeekKey()
+                            localStorage.removeItem(`weeklyAdvice_${currentWeek}`)
+                            if (plaidData?.transactions) {
+                              generateWeeklyAdvice(plaidData.transactions)
+                            }
+                          }}
+                        >
+                          <Sparkles size={14} />
+                          Refresh Advice
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
           </motion.div>
         )}
 
