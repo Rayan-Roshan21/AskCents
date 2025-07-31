@@ -421,19 +421,24 @@ const InsightsTab = () => {
           </div>
           
           <div className="growth-chart">
-            {savingsGrowth.map((point, index) => (
-              <motion.div
-                key={point.month}
-                className="chart-bar"
-                initial={{ height: 0 }}
-                animate={{ height: `${(point.amount / 1000) * 100}%` }}
-                transition={{ delay: index * 0.1 + 0.4, duration: 0.6 }}
-              >
-                <div className="bar-fill" />
-                <span className="bar-label">{point.month}</span>
-                <span className="bar-value">${point.amount}</span>
-              </motion.div>
-            ))}
+            {savingsGrowth.map((point, index) => {
+              const maxAmount = Math.max(...savingsGrowth.map(p => p.amount))
+              const heightPercentage = Math.min(100, (point.amount / maxAmount) * 80) // Cap at 80% for visual appeal
+              
+              return (
+                <motion.div
+                  key={point.month}
+                  className="chart-bar"
+                  initial={{ height: 0 }}
+                  animate={{ height: `${heightPercentage}%` }}
+                  transition={{ delay: index * 0.1 + 0.4, duration: 0.6 }}
+                >
+                  <div className="bar-fill" />
+                  <span className="bar-label">{point.month}</span>
+                  <span className="bar-value">${point.amount.toLocaleString()}</span>
+                </motion.div>
+              )
+            })}
           </div>
           <div className="growth-projection">
             <span className="projection-label">Projected growth over next 12 months:</span>

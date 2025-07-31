@@ -265,31 +265,6 @@ const GoalsTab = () => {
         </motion.button>
       </div>
 
-      {/* Financial Overview */}
-      {plaidData && (
-        <motion.div 
-          className="financial-overview"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <div className="overview-cards">
-            <div className="overview-card">
-              <h4>Total Balance</h4>
-              <span className="amount">${plaidData.totalBalance?.toFixed(0) || 0}</span>
-            </div>
-            <div className="overview-card">
-              <h4>Monthly Spending</h4>
-              <span className="amount">${plaidData.spendingInsights?.totalSpent?.toFixed(0) || 0}</span>
-            </div>
-            <div className="overview-card">
-              <h4>Accounts Connected</h4>
-              <span className="amount">{plaidData.accounts?.length || 0}</span>
-            </div>
-          </div>
-        </motion.div>
-      )}
-
       {/* Rest of the component remains the same... */}
       <motion.div 
         className="goals-content"
@@ -414,4 +389,4 @@ const GoalsTab = () => {
   )
 }
 
-export default GoalsTab
+export default GoalsTab;
