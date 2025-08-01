@@ -1,85 +1,151 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Gift, TrendingUp, CreditCard, Users, ExternalLink, Star, Shield, ChevronRight } from 'lucide-react'
+import { Gift, TrendingUp, CreditCard, Users, ExternalLink, Star, Shield, ChevronRight, Coins, Target, Calendar, CheckCircle, Lock } from 'lucide-react'
 
 const OffersTab = ({ user }) => {
-  const [activeCategory, setActiveCategory] = useState('all')
+  const [activeCategory, setActiveCategory] = useState('points')
+  const [userPoints, setUserPoints] = useState(0)
+  const [completedTasks, setCompletedTasks] = useState([])
+  
+  // Load user points from localStorage
+  useEffect(() => {
+    const savedPoints = localStorage.getItem('askCentsPoints')
+    const savedTasks = localStorage.getItem('askCentsCompletedTasks')
+    
+    if (savedPoints) {
+      setUserPoints(parseInt(savedPoints, 10))
+    }
+    
+    if (savedTasks) {
+      setCompletedTasks(JSON.parse(savedTasks))
+    }
+  }, [])
+  
+  // Save points when they change
+  useEffect(() => {
+    localStorage.setItem('askCentsPoints', userPoints.toString())
+  }, [userPoints])
+  
+  // Save completed tasks when they change
+  useEffect(() => {
+    localStorage.setItem('askCentsCompletedTasks', JSON.stringify(completedTasks))
+  }, [completedTasks])
 
   const categories = [
-    { id: 'all', name: 'All Offers', icon: Gift },
-    { id: 'investing', name: 'Investing', icon: TrendingUp },
-    { id: 'banking', name: 'Banking', icon: CreditCard },
-    { id: 'referrals', name: 'Referrals', icon: Users }
+    { id: 'points', name: 'Points & Rewards', icon: Coins },
+    { id: 'earn', name: 'Earn Points', icon: Target },
+    { id: 'redeem', name: 'Redeem', icon: Gift },
   ]
 
-  const offers = [
+  // Ways to earn points
+  const earningOpportunities = [
     {
-      id: 1,
-      category: 'investing',
-      title: 'Start investing with Wealthsimple',
-      description: 'Get $10 bonus when you invest your first $100',
-      bonus: '$10 bonus',
-      provider: 'Wealthsimple',
-      rating: 4.8,
-      reviews: 12500,
-      features: ['No minimum balance', 'Automated investing', 'TFSA & RRSP'],
-      ctaText: 'Get $10 bonus',
-      isPartner: true,
-      isFeatured: true,
+      id: 'referral',
+      title: 'Refer a Friend',
+      description: 'Invite friends to join AskCents',
+      points: 500,
+      action: 'Share referral link',
+      repeatable: true,
+      icon: Users,
       color: 'mint'
     },
     {
-      id: 2,
-      category: 'banking',
-      title: 'No-fee student banking',
-      description: 'Free chequing account with unlimited transactions',
-      bonus: 'No monthly fees',
-      provider: 'Tangerine',
-      rating: 4.6,
-      reviews: 8900,
-      features: ['No monthly fees', 'Free e-transfers', 'High interest savings'],
-      ctaText: 'Open account',
-      isPartner: true,
-      isFeatured: false,
+      id: 'weekly_task',
+      title: 'Complete Weekly Tasks',
+      description: 'Finish your weekly financial goals',
+      points: 100,
+      action: 'View tasks',
+      repeatable: true,
+      icon: Calendar,
       color: 'navy'
     },
     {
-      id: 3,
-      category: 'banking',
-      title: 'Free credit score monitoring',
-      description: 'Check your credit score monthly at no cost',
-      bonus: 'Always free',
-      provider: 'Credit Karma',
-      rating: 4.7,
-      reviews: 15600,
-      features: ['Monthly updates', 'Credit monitoring', 'Improvement tips'],
-      ctaText: 'Check score',
-      isPartner: false,
-      isFeatured: false,
+      id: 'chat_milestone',
+      title: 'Chat Milestone',
+      description: 'Ask 10 questions in the chat',
+      points: 150,
+      action: 'Start chatting',
+      repeatable: false,
+      icon: TrendingUp,
       color: 'beige'
     },
     {
-      id: 4,
-      category: 'referrals',
-      title: 'Refer friends to AskCents',
-      description: 'You and your friend both get premium access',
-      bonus: '1 month free',
-      provider: 'AskCents',
-      rating: null,
-      reviews: null,
-      features: ['Premium AI coaching', 'Advanced insights', 'Goal tracking'],
-      ctaText: 'Invite friends',
-      isPartner: false,
-      isFeatured: true,
+      id: 'profile_complete',
+      title: 'Complete Profile',
+      description: 'Fill out your complete financial profile',
+      points: 200,
+      action: 'Complete profile',
+      repeatable: false,
+      icon: CheckCircle,
       color: 'mint'
     }
   ]
 
-  const filteredOffers = activeCategory === 'all' 
-    ? offers 
-    : offers.filter(offer => offer.category === activeCategory)
+  // Redemption options
+  const redemptionOptions = [
+    {
+      id: 'premium_week',
+      title: '1 Week Premium Access',
+      description: 'Unlock advanced AI features and insights',
+      cost: 300,
+      features: ['Advanced AI coaching', 'Detailed analytics', 'Priority support'],
+      available: true,
+      icon: Star,
+      color: 'mint'
+    },
+    {
+      id: 'premium_month',
+      title: '1 Month Premium Access',
+      description: 'Full premium experience for a month',
+      cost: 1000,
+      features: ['All premium features', 'Personalized reports', 'Goal tracking+'],
+      available: true,
+      icon: TrendingUp,
+      color: 'navy'
+    },
+    {
+      id: 'financial_consultation',
+      title: 'Free Financial Consultation',
+      description: '30-min session with a certified advisor',
+      cost: 2000,
+      features: ['Certified financial advisor', '30-minute session', 'Personalized advice'],
+      available: userPoints >= 2000,
+      icon: Users,
+      color: 'beige'
+    },
+    {
+      id: 'exclusive_content',
+      title: 'Exclusive Financial Course',
+      description: 'Access to premium educational content',
+      cost: 1500,
+      features: ['Video tutorials', 'Worksheets', 'Certificate'],
+      available: true,
+      icon: Shield,
+      color: 'mint'
+    }
+  ]
+  const handleEarnPoints = (opportunity) => {
+    if (opportunity.id === 'referral') {
+      // Handle referral action
+      setUserPoints(prev => prev + opportunity.points)
+      // In a real app, you'd generate and share a referral link
+      alert(`Referral link copied! You'll earn ${opportunity.points} points when your friend signs up.`)
+    } else if (!completedTasks.includes(opportunity.id)) {
+      setUserPoints(prev => prev + opportunity.points)
+      setCompletedTasks(prev => [...prev, opportunity.id])
+      alert(`Congratulations! You earned ${opportunity.points} points!`)
+    }
+  }
 
-  const featuredOffers = offers.filter(offer => offer.isFeatured)
+  const handleRedeem = (option) => {
+    if (userPoints >= option.cost) {
+      setUserPoints(prev => prev - option.cost)
+      alert(`Successfully redeemed: ${option.title}!`)
+      // In a real app, you'd handle the actual redemption logic
+    } else {
+      alert(`You need ${option.cost - userPoints} more points to redeem this item.`)
+    }
+  }
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -105,10 +171,26 @@ const OffersTab = ({ user }) => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <h1>Student Offers</h1>
-          <p>Curated deals and partnerships for students</p>
+          <h1>Rewards Center</h1>
+          <p>Earn points, unlock premium features, and get exclusive offers</p>
         </motion.div>
       </div>
+
+      {/* Points Display - Moved to separate section */}
+      <motion.div 
+        className="points-section"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <div className="points-container">
+          <Coins className="points-icon" />
+          <div className="points-info">
+            <span className="points-amount">{userPoints.toLocaleString()}</span>
+            <span className="points-label">Available Points</span>
+          </div>
+        </div>
+      </motion.div>
 
       {/* Categories */}
       <motion.div 
@@ -137,178 +219,175 @@ const OffersTab = ({ user }) => {
         initial="hidden"
         animate="visible"
       >
-        {/* Featured Offers */}
-        {activeCategory === 'all' && featuredOffers.length > 0 && (
-          <motion.div className="featured-section" variants={itemVariants}>
-            <h2>Featured for You</h2>
-            <div className="featured-offers">
-              {featuredOffers.map((offer, index) => (
+        {/* Points Overview */}
+        {activeCategory === 'points' && (
+          <motion.div className="points-overview" variants={itemVariants}>
+            <div className="points-stats">
+              <div className="stat-card">
+                <div className="stat-icon">
+                  <Coins size={24} />
+                </div>
+                <div className="stat-info">
+                  <span className="stat-number">{userPoints.toLocaleString()}</span>
+                  <span className="stat-label">Total Points</span>
+                </div>
+              </div>
+              
+              <div className="stat-card">
+                <div className="stat-icon">
+                  <Target size={24} />
+                </div>
+                <div className="stat-info">
+                  <span className="stat-number">{completedTasks.length}</span>
+                  <span className="stat-label">Tasks Completed</span>
+                </div>
+              </div>
+              
+              <div className="stat-card">
+                <div className="stat-icon">
+                  <Gift size={24} />
+                </div>
+                <div className="stat-info">
+                  <span className="stat-number">{redemptionOptions.filter(option => userPoints >= option.cost).length}</span>
+                  <span className="stat-label">Available Rewards</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="quick-actions">
+              <h3>Quick Actions</h3>
+              <div className="action-buttons">
+                <motion.button 
+                  className="action-btn earn"
+                  onClick={() => setActiveCategory('earn')}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Target size={20} />
+                  Earn More Points
+                </motion.button>
+                
+                <motion.button 
+                  className="action-btn redeem"
+                  onClick={() => setActiveCategory('redeem')}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Gift size={20} />
+                  Redeem Rewards
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Earn Points Section */}
+        {activeCategory === 'earn' && (
+          <motion.div className="earn-section" variants={itemVariants}>
+            <h2>Ways to Earn Points</h2>
+            <div className="earning-grid">
+              {earningOpportunities.map((opportunity, index) => (
                 <motion.div
-                  key={offer.id}
-                  className={`featured-offer-card ${offer.color}`}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  key={opportunity.id}
+                  className={`earning-card ${opportunity.color}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 + 0.3 }}
                   whileHover={{ scale: 1.02 }}
                 >
-                  <div className="featured-badge">
-                    <Star size={16} />
-                    Featured
+                  <div className="earning-header">
+                    <div className="earning-icon">
+                      <opportunity.icon size={24} />
+                    </div>
+                    <div className="points-badge">
+                      +{opportunity.points} pts
+                    </div>
                   </div>
                   
-                  <div className="offer-content">
-                    <div className="offer-header">
-                      <h3>{offer.title}</h3>
-                      <span className="bonus-badge">{offer.bonus}</span>
-                    </div>
+                  <div className="earning-content">
+                    <h3>{opportunity.title}</h3>
+                    <p>{opportunity.description}</p>
                     
-                    <p className="offer-description">{offer.description}</p>
-                    
-                    <div className="offer-provider">
-                      <span className="provider-name">{offer.provider}</span>
-                      {offer.isPartner && (
-                        <span className="partner-badge">
-                          <Shield size={12} />
-                          Trusted Partner
-                        </span>
-                      )}
-                    </div>
-                    
-                    <motion.button 
-                      className="offer-cta"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      {offer.ctaText}
-                      <ExternalLink size={16} />
-                    </motion.button>
+                    {completedTasks.includes(opportunity.id) && !opportunity.repeatable && (
+                      <div className="completed-badge">
+                        <CheckCircle size={16} />
+                        Completed
+                      </div>
+                    )}
                   </div>
+                  
+                  <motion.button 
+                    className={`earning-btn ${completedTasks.includes(opportunity.id) && !opportunity.repeatable ? 'completed' : ''}`}
+                    onClick={() => handleEarnPoints(opportunity)}
+                    disabled={completedTasks.includes(opportunity.id) && !opportunity.repeatable}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {completedTasks.includes(opportunity.id) && !opportunity.repeatable ? 'Completed' : opportunity.action}
+                  </motion.button>
                 </motion.div>
               ))}
             </div>
           </motion.div>
         )}
 
-        {/* All Offers */}
-        <motion.div className="offers-section" variants={itemVariants}>
-          <h2>
-            {activeCategory === 'all' ? 'All Offers' : categories.find(c => c.id === activeCategory)?.name}
-          </h2>
-          
-          <div className="offers-grid">
-            {filteredOffers.map((offer, index) => (
-              <motion.div
-                key={offer.id}
-                className="offer-card"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 + 0.4 }}
-                whileHover={{ scale: 1.02 }}
-              >
-                <div className="offer-header">
-                  <div className="offer-info">
-                    <h3>{offer.title}</h3>
-                    <p>{offer.description}</p>
-                  </div>
-                  <div className="offer-bonus">
-                    <span className="bonus-text">{offer.bonus}</span>
-                  </div>
-                </div>
-
-                <div className="offer-details">
-                  <div className="provider-info">
-                    <span className="provider-name">{offer.provider}</span>
-                    {offer.rating && (
-                      <div className="rating">
-                        <Star size={14} className="star-filled" />
-                        <span>{offer.rating}</span>
-                        <span className="reviews">({offer.reviews?.toLocaleString()})</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="offer-features">
-                    {offer.features.map((feature, featureIndex) => (
-                      <span key={featureIndex} className="feature-tag">
-                        {feature}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="offer-footer">
-                    {offer.isPartner && (
-                      <span className="partner-indicator">
-                        <Shield size={14} />
-                        Trusted Partner
-                      </span>
-                    )}
-                    
-                    <motion.button 
-                      className="offer-action"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      {offer.ctaText}
-                      <ChevronRight size={16} />
-                    </motion.button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Safety Notice */}
-        <motion.div className="safety-notice" variants={itemVariants}>
-          <div className="safety-content">
-            <Shield className="safety-icon" />
-            <div className="safety-text">
-              <h3>Your safety matters</h3>
-              <p>
-                All partners are vetted for student safety. We only recommend legitimate, 
-                regulated financial services. Always read terms before signing up.
-              </p>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Referral Section */}
-        {activeCategory === 'all' || activeCategory === 'referrals' && (
-          <motion.div className="referral-section" variants={itemVariants}>
-            <div className="referral-card">
-              <div className="referral-content">
-                <div className="referral-icon">
-                  <Users size={32} />
-                </div>
-                <div className="referral-text">
-                  <h3>Earn premium access</h3>
-                  <p>Refer friends and get free premium features for both of you</p>
-                </div>
-                <motion.button 
-                  className="referral-btn"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+        {/* Redeem Section */}
+        {activeCategory === 'redeem' && (
+          <motion.div className="redeem-section" variants={itemVariants}>
+            <h2>Redeem Your Points</h2>
+            <div className="redemption-grid">
+              {redemptionOptions.map((option, index) => (
+                <motion.div
+                  key={option.id}
+                  className={`redemption-card ${option.color} ${userPoints >= option.cost ? 'available' : 'locked'}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 + 0.3 }}
+                  whileHover={{ scale: 1.02 }}
                 >
-                  Share AskCents
-                </motion.button>
-              </div>
-              
-              <div className="referral-stats">
-                <div className="stat">
-                  <span className="stat-number">0</span>
-                  <span className="stat-label">Friends referred</span>
-                </div>
-                <div className="stat">
-                  <span className="stat-number">0</span>
-                  <span className="stat-label">Premium days earned</span>
-                </div>
-              </div>
+                  <div className="redemption-header">
+                    <div className="redemption-icon">
+                      {userPoints >= option.cost ? (
+                        <option.icon size={24} />
+                      ) : (
+                        <Lock size={24} />
+                      )}
+                    </div>
+                    <div className="cost-badge">
+                      {option.cost} pts
+                    </div>
+                  </div>
+                  
+                  <div className="redemption-content">
+                    <h3>{option.title}</h3>
+                    <p>{option.description}</p>
+                    
+                    <div className="features-list">
+                      {option.features.map((feature, featureIndex) => (
+                        <span key={featureIndex} className="feature-tag">
+                          {feature}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <motion.button 
+                    className={`redemption-btn ${userPoints >= option.cost ? 'available' : 'locked'}`}
+                    onClick={() => handleRedeem(option)}
+                    disabled={userPoints < option.cost}
+                    whileHover={userPoints >= option.cost ? { scale: 1.05 } : {}}
+                    whileTap={userPoints >= option.cost ? { scale: 0.95 } : {}}
+                  >
+                    {userPoints >= option.cost ? 'Redeem' : `Need ${option.cost - userPoints} more points`}
+                  </motion.button>
+                </motion.div>
+              ))}
             </div>
           </motion.div>
         )}
       </motion.div>
     </div>
-  )
-}
+  );
+};
 
-export default OffersTab
+export default OffersTab;
