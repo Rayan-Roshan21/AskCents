@@ -210,6 +210,15 @@ const ChatTab = ({ user }) => {
   - Suggest reputable resources and official government websites
   - Encourage users to verify information independently
 
+  Message format:
+  - ** Need to be concise, clear, and actionable. Needs to be 150 words or less unless complex topic.**
+  - Always respond in a friendly, conversational tone
+  - Use markdown formatting for clarity (bullet points, headings, links)
+  - Include relevant links to official resources or reputable financial sites
+  - If providing examples, use realistic Canadian scenarios
+  - If user asks about current events or data, acknowledge limitations and suggest where to find up-to-date information
+  - Keep it short and to the point, but thorough enough to be helpful
+
   ${conversationContext}
 
   Current user question: ${userMessage}
@@ -282,19 +291,6 @@ const ChatTab = ({ user }) => {
               <h1>Hey {user.name} 👋</h1>
               <p>What's on your mind?</p>
             </div>
-            {messages.length > 0 && (
-              <motion.button
-                className="clear-chat-btn"
-                onClick={clearConversation}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                title="Clear conversation"
-              >
-                <Trash2 size={18} />
-              </motion.button>
-            )}
           </div>
         </motion.div>
       </div>
@@ -411,6 +407,20 @@ const ChatTab = ({ user }) => {
 
       {/* Input */}
       <div className="chat-input-container">
+        {messages.length > 0 && (
+          <motion.button
+            className="clear-conversation-btn"
+            onClick={clearConversation}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            title="Clear conversation"
+          >
+            <Trash2 size={16} />
+            Clear chat
+          </motion.button>
+        )}
         <div className="chat-input">
           <input
             type="text"

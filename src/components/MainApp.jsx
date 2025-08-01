@@ -9,6 +9,9 @@ import GoalsTab from './tabs/GoalsTab'
 import OffersTab from './tabs/OffersTab'
 import SettingsTab from './tabs/SettingsTab'
 
+// Import logo
+import logoImage from '../assets/logo.png'
+
 const MainApp = ({ user }) => {
   const [activeTab, setActiveTab] = useState('chat')
 
@@ -24,6 +27,18 @@ const MainApp = ({ user }) => {
 
   return (
     <div className="main-app">
+      {/* App Logo */}
+      <div className="app-logo-header">
+        <motion.img
+          src={logoImage}
+          alt="AskCents Logo"
+          className="main-app-logo"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+        />
+      </div>
+
       <div className="main-content">
         <AnimatePresence mode="wait">
           <motion.div

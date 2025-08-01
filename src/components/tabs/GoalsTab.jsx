@@ -430,19 +430,6 @@ Example format:
             }
           </p>
         </motion.div>
-
-        <motion.button
-          className="add-goal-btn"
-          onClick={() => setShowAddGoal(true)}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Plus size={20} />
-          Add Goal
-        </motion.button>
       </div>
 
       {/* Rest of the component remains the same... */}
@@ -454,8 +441,24 @@ Example format:
       >
         {/* Active Goals */}
         <motion.div className="goals-section" variants={itemVariants}>
-          <h2>Your Goals</h2>
-          <p>Track your progress and stay motivated</p>
+          <div className="section-header">
+            <div>
+              <h2>Your Goals</h2>
+              <p>Track your progress and stay motivated</p>
+            </div>
+            <motion.button
+              className="add-goal-btn"
+              onClick={() => setShowAddGoal(true)}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Plus size={20} />
+              Add Goal
+            </motion.button>
+          </div>
           {activeGoals.length === 0 ? (
             <div className="empty-state">
               <Target size={48} className="empty-icon" />
