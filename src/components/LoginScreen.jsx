@@ -4,6 +4,7 @@ import { ChevronRight, Shield, CreditCard, TrendingUp, Lock, Loader } from 'luci
 import { usePlaidLink } from 'react-plaid-link'
 import { createLinkToken, exchangePublicToken, getUserFinancialData, extractUserProfile } from '../services/plaidService'
 import { useUser } from '../contexts/UserContext'
+import logoImage from '../assets/logo_white.png'
 
 const LoginScreen = ({ onLoginComplete }) => {
   const [linkToken, setLinkToken] = useState(null)
@@ -117,141 +118,141 @@ const LoginScreen = ({ onLoginComplete }) => {
 
   return (
     <div className="login-screen">
-      <div className="login-container">
-        <motion.div 
-          className="login-content"
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          {/* Logo */}
+      {/* Left Side - Hero Section */}
+      <motion.div 
+        className="login-hero"
+        initial={{ opacity: 0, x: -50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.8 }}
+      >
+        <div className="hero-content">
           <motion.div 
-            className="logo-section"
+            className="app-logo"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
           >
-            <div className="app-logo">
-              <span className="logo-text">AskCents</span>
-              <div className="logo-icons">
-                <span className="emoji">🎓</span>
-                <span className="emoji">💸</span>
-              </div>
-            </div>
-            <h1>Welcome to AskCents</h1>
-            <p>Your AI-powered financial coach for students</p>
+            <img src={logoImage} alt="AskCents" className="logo-image" />
           </motion.div>
-
-          {/* Plaid Authentication */}
-          <motion.div 
-            className="auth-section"
+          
+          <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.5 }}
+            transition={{ delay: 0.4, duration: 0.6 }}
           >
-            <div className="auth-header">
-              <h2>Sign in with your bank account</h2>
-              <p>Securely connect your bank to get personalized financial insights</p>
-            </div>
+            Smart Financial Decisions Start Here
+          </motion.h1>
+          
+          <motion.p
+            className="hero-subtitle"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 0.6 }}
+          >
+            Your AI-powered financial coach designed for students. 
+            Get personalized insights, track spending, and build healthy financial habits.
+          </motion.p>
 
-            {/* Security Features */}
-            <div className="security-features">
-              <div className="feature">
-                <Shield className="feature-icon" />
-                <span>Bank-level security</span>
-              </div>
-              <div className="feature">
-                <Lock className="feature-icon" />
-                <span>256-bit encryption</span>
-              </div>
-              <div className="feature">
-                <CreditCard className="feature-icon" />
-                <span>Read-only access</span>
-              </div>
-            </div>
-
-            {/* Plaid Connect Button */}
-            <motion.button
-              className="plaid-connect-btn"
-              onClick={handlePlaidLogin}
-              disabled={!ready || isConnecting}
-              whileHover={ready && !isConnecting ? { scale: 1.02 } : {}}
-              whileTap={ready && !isConnecting ? { scale: 0.98 } : {}}
-            >
-              {isConnecting ? (
-                <>
-                  <Loader className="loading-icon" />
-                  Connecting to your bank...
-                </>
-              ) : !ready ? (
-                <>
-                  <Loader className="loading-icon" />
-                  Initializing secure connection...
-                </>
-              ) : (
-                <>
-                  <CreditCard size={20} />
-                  Connect Bank Account
-                  <ChevronRight size={20} />
-                </>
-              )}
-            </motion.button>
-
-            {/* Connection Error */}
-            {connectionError && (
-              <motion.div 
-                className="error-message"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                {connectionError}
-              </motion.div>
-            )}
-
-            {/* Benefits */}
-            <div className="benefits">
-              <h3>What you'll get:</h3>
-              <ul>
-                <li>
-                  <TrendingUp size={16} />
-                  <span>Personalized spending insights</span>
-                </li>
-                <li>
-                  <TrendingUp size={16} />
-                  <span>Smart saving recommendations</span>
-                </li>
-                <li>
-                  <TrendingUp size={16} />
-                  <span>AI-powered financial coaching</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Demo Option */}
-            <motion.div 
-              className="demo-section"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-            >
-              <div className="divider">
-                <span>or</span>
-              </div>
-              <button
-                type="button"
-                className="demo-btn"
-                onClick={handleDemoLogin}
-                disabled={isConnecting}
-              >
-                Try Demo Mode (No Bank Required)
-              </button>
-              <p className="demo-note">
-                Explore AskCents with sample data - you can connect your bank later
-              </p>
-            </motion.div>
+          <motion.div 
+            className="hero-decoration"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 1, duration: 0.8 }}
+          >
           </motion.div>
-        </motion.div>
-      </div>
+        </div>
+      </motion.div>
+
+      {/* Right Side - Authentication */}
+      <motion.div 
+        className="login-auth"
+        initial={{ opacity: 0, x: 50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.8, delay: 0.2 }}
+      >
+        <div className="auth-container">
+          <motion.div 
+            className="auth-header"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 0.6 }}
+          >
+            <h2>Get Started</h2>
+            <p>Connect your bank account for personalized financial insights</p>
+          </motion.div>
+
+          {/* Security Features */}
+          <motion.div 
+            className="security-badges"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8, duration: 0.6 }}
+          >
+          </motion.div>
+
+          {/* Plaid Connect Button */}
+          <motion.button
+            className="connect-button"
+            onClick={handlePlaidLogin}
+            disabled={!ready || isConnecting}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1, duration: 0.6 }}
+            whileHover={ready && !isConnecting ? { scale: 1.02 } : {}}
+            whileTap={ready && !isConnecting ? { scale: 0.98 } : {}}
+          >
+            {isConnecting ? (
+              <>
+                <Loader className="loading-icon" />
+                <span>Connecting...</span>
+              </>
+            ) : !ready ? (
+              <>
+                <Loader className="loading-icon" />
+                <span>Initializing...</span>
+              </>
+            ) : (
+              <>
+                <CreditCard size={24} />
+                <span>Connect Your Bank</span>
+                <ChevronRight size={20} />
+              </>
+            )}
+          </motion.button>
+
+          {/* Connection Error */}
+          {connectionError && (
+            <motion.div 
+              className="error-alert"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              {connectionError}
+            </motion.div>
+          )}
+
+          {/* Demo Option */}
+          <motion.div 
+            className="demo-option"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.2, duration: 0.6 }}
+          >
+            <div className="divider">
+              <span>or explore with demo data</span>
+            </div>
+            <button
+              type="button"
+              className="demo-button"
+              onClick={handleDemoLogin}
+              disabled={isConnecting}
+            >
+              Try Demo Mode
+            </button>
+          </motion.div>
+
+        </div>
+      </motion.div>
     </div>
   )
 }
