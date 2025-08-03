@@ -1919,7 +1919,7 @@
 }
 
 .stat-card.income .stat-icon {
-  background: var(--gradient-mint);
+  background:var(--gradient-primary);
 }
 
 .stat-card.spending .stat-icon {
@@ -1927,7 +1927,7 @@
 }
 
 .stat-card.savings .stat-icon {
-  background: var(--gradient-beige);
+  background: var(--gradient-primary);
 }
 
 .stat-icon {
@@ -2063,12 +2063,40 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 0.25rem;
+  gap: 0.1rem;
 }
 
 .amount {
   font-weight: 600;
   color: var(--navy-blue);
+  font-size: 1rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Alternative layout - amount and percentage on same line */
+.category-amount-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 120px;
+  justify-content: flex-end;
+}
+
+.category-amount-inline .amount {
+  font-weight: 700;
+  color: var(--navy-blue);
+  font-size: 1rem;
+}
+
+.category-amount-inline .percentage {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gray-600);
+  min-width: 35px;
+  text-align: right;
 }
 
 .trend {
@@ -4475,7 +4503,7 @@
 }
 
 .empty-icon {
-  color: rgba(120, 119, 198, 0.6);
+  color: white;
   margin-bottom: 1rem;
 }
 

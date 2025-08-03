@@ -371,9 +371,6 @@ const InsightsTab = () => {
         <motion.div className="insight-card spending-breakdown" variants={itemVariants}>
           <div className="card-header">
             <h3>Spending Breakdown</h3>
-            <span className="card-subtitle">
-              {hasPlaidData ? 'Where your money went' : 'Sample spending breakdown'}
-            </span>
           </div>
           
           <div className="categories-list">
@@ -395,8 +392,8 @@ const InsightsTab = () => {
                       <motion.div
                         className={`progress-fill ${category.color}`}
                         initial={{ width: 0 }}
-                        animate={{ width: `${category.percentage}%` }}
                         transition={{ delay: index * 0.1 + 0.5, duration: 0.8 }}
+                        animate={{ width: `${category.percentage}%` }}
                       />
                     </div>
                     <span className="percentage">{category.percentage}%</span>
@@ -404,9 +401,6 @@ const InsightsTab = () => {
                 </div>
                 <div className="category-amount">
                   <span className="amount">${category.amount}</span>
-                  <span className={`trend ${category.trend.startsWith('+') ? 'up' : 'down'}`}>
-                    {category.trend}
-                  </span>
                 </div>
               </motion.div>
             ))}
@@ -417,7 +411,6 @@ const InsightsTab = () => {
         <motion.div className="insight-card savings-growth" variants={itemVariants}>
           <div className="card-header">
             <h3>Savings Growth</h3>
-            <span className="card-subtitle">Building your future</span>
           </div>
           
           <div className="growth-chart">
@@ -450,11 +443,6 @@ const InsightsTab = () => {
         <motion.div className="insight-card micro-investment" variants={itemVariants}>
           <div className="card-header">
             <h3>Micro-Investment Potential</h3>
-            <span className="card-subtitle">
-              {microInvestmentPotential.isRealData 
-          ? 'Based on your spending patterns' 
-          : 'Small changes, big impact'}
-            </span>
           </div>
           
           <div className="investment-content">
@@ -463,7 +451,7 @@ const InsightsTab = () => {
           <DollarSign className="coffee-icon" />
           <div className="spend-details">
             <span className="category-name">{microInvestmentPotential.targetCategory}</span>
-            <span className="amount">${microInvestmentPotential.coffeeSpend}/month</span>
+            <span className="amount"> ${microInvestmentPotential.coffeeSpend}/month</span>
           </div>
               </div>
               <ChevronRight className="arrow" />
@@ -471,7 +459,7 @@ const InsightsTab = () => {
           <TrendingUp className="invest-icon" />
           <div className="invest-details">
             <span className="invest-label">Could invest</span>
-            <span className="invest-amount">${microInvestmentPotential.potentialInvestment}/month</span>
+            <span className="invest-amount"> ${microInvestmentPotential.potentialInvestment}/month</span>
           </div>
               </div>
             </div>
@@ -480,18 +468,18 @@ const InsightsTab = () => {
               <div className="investment-breakdown">
           <div className="breakdown-item">
             <span className="label">Total discretionary spending:</span>
-            <span className="value">${microInvestmentPotential.totalDiscretionary}</span>
+            <span className="value"> ${microInvestmentPotential.totalDiscretionary}</span>
           </div>
           <div className="breakdown-item">
             <span className="label">Potential savings rate:</span>
-            <span className="value">{microInvestmentPotential.savingsRate}%</span>
+            <span className="value"> {microInvestmentPotential.savingsRate}%</span>
           </div>
               </div>
             )}
             
             <div className="projection">
               <span className="projection-label">Potential annual growth (7% return):</span>
-              <span className="projection-value">${microInvestmentPotential.projectedGrowth}</span>
+              <span className="projection-value"> ${microInvestmentPotential.projectedGrowth}</span>
             </div>
             
             <div className="investment-tips">
@@ -513,8 +501,6 @@ const InsightsTab = () => {
         <motion.div className="insight-card financial-health" variants={itemVariants}>
           <div className="card-header">
             <h3>Financial Health</h3>
-            <span className="card-subtitle">Your overall financial wellness</span>
-
           </div>
           
           <div className="health-score">
