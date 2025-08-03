@@ -27,19 +27,19 @@ const MainApp = ({ user }) => {
 
   return (
     <div className="main-app">
-      {/* App Logo */}
-      <div className="app-logo-header">
-        <motion.img
-          src={logoImage}
-          alt="AskCents Logo"
-          className="main-app-logo"
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3 }}
-        />
-      </div>
-
       <div className="main-content">
+        {/* App Logo - moved inside main-content */}
+        <div className="app-logo-header">
+          <motion.img
+            src={logoImage}
+            alt="AskCents Logo"
+            className="main-app-logo"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+          />
+        </div>
+        
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
