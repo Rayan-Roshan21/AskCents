@@ -183,13 +183,6 @@ const OffersTab = ({ user }) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
       >
-        <div className="points-container">
-          <Coins className="points-icon" />
-          <div className="points-info">
-            <span className="points-amount">{userPoints.toLocaleString()}</span>
-            <span className="points-label">Available Points</span>
-          </div>
-        </div>
       </motion.div>
 
       {/* Categories */}
@@ -211,6 +204,7 @@ const OffersTab = ({ user }) => {
             {category.name}
           </motion.button>
         ))}
+        
       </motion.div>
 
       <motion.div 

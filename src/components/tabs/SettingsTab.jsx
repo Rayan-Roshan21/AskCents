@@ -1,17 +1,84 @@
-import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { User, Shield, Bell, CreditCard, HelpCircle, MessageSquare, LogOut, ChevronRight, Eye, EyeOff, Check } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { User, Shield, Bell, CreditCard, HelpCircle, MessageSquare, LogOut, ChevronRight, Eye, EyeOff, Check, X, Save, Download, Trash2, Moon, Sun, Edit3 } from 'lucide-react'
 import { useUser } from '../../contexts/UserContext'
 
 const SettingsTab = ({ user }) => {
-  const { clearUserData } = useUser()
-  const [anonymousMode, setAnonymousMode] = useState(false)
-  const [notifications, setNotifications] = useState({
-    tips: true,
-    goals: true,
-    spending: false,
-    offers: true
+  const { clearUserData, updateUser } = useUser()
+  const [anonymousMode, setAnonymousMode] = useState(() => {
+    return localStorage.getItem('askCentsAnonymousMode') === 'true'
   })
+  const [notifications, setNotifications] = useState(() => {
+    const saved = localStorage.getItem('askCentsNotifications')
+    return saved ? JSON.parse(saved) : {
+      tips: true,
+      goals: true,
+      spending: false,
+      offers: true,
+      weekly: true,
+      security: true
+    }
+  })
+  const [showProfileModal, setShowProfileModal] = useState(false)
+  const [showNotificationsModal, setShowNotificationsModal] = useState(false)
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false)
+  const [editProfile, setEditProfile] = useState({
+    name: user.name || '',
+    email: user.email || ''
+  })
+
+  // Save settings to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem('askCentsAnonymousMode', anonymousMode.toString())
+  }, [anonymousMode])
+
+  useEffect(() => {
+    localStorage.setItem('askCentsNotifications', JSON.stringify(notifications))
+  }, [notifications])
+
+  const handleNotificationChange = (key, value) => {
+    setNotifications(prev => ({
+      ...prev,
+      [key]: value
+    }))
+  }
+
+  const handleSaveProfile = () => {
+    updateUser(editProfile)
+    setShowProfileModal(false)
+  }
+
+  const handleExportData = () => {
+    const userData = {
+      profile: user,
+      settings: {
+        notifications,
+        anonymousMode,
+        darkMode
+      },
+      points: localStorage.getItem('askCentsPoints'),
+      completedTasks: localStorage.getItem('askCentsCompletedTasks'),
+      exportDate: new Date().toISOString()
+    }
+    
+    const dataStr = JSON.stringify(userData, null, 2)
+    const dataBlob = new Blob([dataStr], { type: 'application/json' })
+    const url = URL.createObjectURL(dataBlob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'askcents-data-export.json'
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleDeleteAccount = () => {
+    if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      // Clear all user data
+      localStorage.clear()
+      clearUserData()
+      alert('Your account has been deleted.')
+    }
+  }
 
   const settingsSections = [
     {
@@ -22,23 +89,24 @@ const SettingsTab = ({ user }) => {
           icon: User,
           title: 'Profile Settings',
           subtitle: 'Email, name, and preferences',
-          action: 'view'
+          action: 'view',
+          onClick: () => setShowProfileModal(true)
+        },
+        {
+          id: 'notifications',
+          icon: Bell,
+          title: 'Notifications',
+          subtitle: 'Manage your notification preferences',
+          action: 'view',
+          onClick: () => setShowNotificationsModal(true)
         },
         {
           id: 'privacy',
           icon: Shield,
           title: 'Privacy & Data',
           subtitle: 'Control how your data is used',
-          action: 'view'
-        },
-        {
-          id: 'anonymous',
-          icon: anonymousMode ? EyeOff : Eye,
-          title: 'Anonymous Mode',
-          subtitle: anonymousMode ? 'Currently anonymous' : 'Share data for better insights',
-          action: 'toggle',
-          value: anonymousMode,
-          onChange: setAnonymousMode
+          action: 'view',
+          onClick: () => setShowPrivacyModal(true)
         }
       ]
     },
@@ -50,14 +118,38 @@ const SettingsTab = ({ user }) => {
           icon: User,
           title: 'Manage Goals',
           subtitle: 'Edit or remove your financial goals',
-          action: 'view'
+          action: 'view',
+          onClick: () => alert('Goal management coming soon!')
         },
         {
           id: 'coaching',
           icon: MessageSquare,
           title: 'Coaching Preferences',
           subtitle: 'Customize your AI coach style',
-          action: 'view'
+          action: 'view',
+          onClick: () => alert('Coaching preferences coming soon!')
+        }
+      ]
+    },
+    {
+      title: 'Data & Privacy',
+      items: [
+        {
+          id: 'export',
+          icon: Download,
+          title: 'Export Data',
+          subtitle: 'Download your personal data',
+          action: 'view',
+          onClick: handleExportData
+        },
+        {
+          id: 'delete',
+          icon: Trash2,
+          title: 'Delete Account',
+          subtitle: 'Permanently delete your account',
+          action: 'view',
+          onClick: handleDeleteAccount,
+          danger: true
         }
       ]
     },
@@ -82,14 +174,16 @@ const SettingsTab = ({ user }) => {
           icon: HelpCircle,
           title: 'Help Center',
           subtitle: 'FAQs and tutorials',
-          action: 'view'
+          action: 'view',
+          onClick: () => window.open('https://help.askcents.com', '_blank')
         },
         {
           id: 'feedback',
           icon: MessageSquare,
           title: 'Send Feedback',
           subtitle: 'Report issues or suggest features',
-          action: 'view'
+          action: 'view',
+          onClick: () => window.open('mailto:feedback@askcents.com?subject=AskCents Feedback', '_blank')
         }
       ]
     }
@@ -98,6 +192,8 @@ const SettingsTab = ({ user }) => {
   const handleItemClick = (item) => {
     if (item.action === 'toggle' && item.onChange) {
       item.onChange(!item.value)
+    } else if (item.onClick) {
+      item.onClick()
     } else {
       // Handle navigation to other screens
       console.log('Navigate to:', item.id)
@@ -158,9 +254,11 @@ const SettingsTab = ({ user }) => {
           </div>
           <motion.button 
             className="edit-profile-btn"
+            onClick={() => setShowProfileModal(true)}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
+            <Edit3 size={16} />
             Edit
           </motion.button>
         </motion.div>
@@ -177,7 +275,7 @@ const SettingsTab = ({ user }) => {
               {section.items.map((item, itemIndex) => (
                 <motion.div
                   key={item.id}
-                  className={`settings-item ${item.highlight ? 'highlight' : ''}`}
+                  className={`settings-item ${item.highlight ? 'highlight' : ''} ${item.danger ? 'danger' : ''}`}
                   onClick={() => handleItemClick(item)}
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
@@ -289,6 +387,205 @@ const SettingsTab = ({ user }) => {
           </motion.button>
         </motion.div>
       </motion.div>
+
+      {/* Modals */}
+      <AnimatePresence>
+        {/* Profile Edit Modal */}
+        {showProfileModal && (
+          <motion.div
+            className="modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowProfileModal(false)}
+          >
+            <motion.div
+              className="modal-content"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="modal-header">
+                <h3>Edit Profile</h3>
+                <button onClick={() => setShowProfileModal(false)}>
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="modal-body">
+                <div className="form-group">
+                  <label>Name</label>
+                  <input
+                    type="text"
+                    value={editProfile.name}
+                    onChange={(e) => setEditProfile(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Enter your name"
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Email</label>
+                  <input
+                    type="email"
+                    value={editProfile.email}
+                    onChange={(e) => setEditProfile(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder="Enter your email"
+                  />
+                </div>
+              </div>
+              
+              <div className="modal-footer">
+                <button className="btn-secondary" onClick={() => setShowProfileModal(false)}>
+                  Cancel
+                </button>
+                <button className="btn-primary" onClick={handleSaveProfile}>
+                  <Save size={16} />
+                  Save Changes
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* Notifications Modal */}
+        {showNotificationsModal && (
+          <motion.div
+            className="modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowNotificationsModal(false)}
+          >
+            <motion.div
+              className="modal-content"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="modal-header">
+                <h3>Notification Settings</h3>
+                <button onClick={() => setShowNotificationsModal(false)}>
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="modal-body">
+                <div className="notification-options">
+                  {Object.entries({
+                    tips: 'Financial Tips',
+                    goals: 'Goal Updates',
+                    spending: 'Spending Alerts',
+                    offers: 'Offers & Rewards',
+                    weekly: 'Weekly Reports',
+                    security: 'Security Alerts'
+                  }).map(([key, label]) => (
+                    <div key={key} className="notification-item">
+                      <div className="notification-info">
+                        <h4>{label}</h4>
+                        <p>Receive notifications about {label.toLowerCase()}</p>
+                      </div>
+                      <motion.div
+                        className={`toggle-switch ${notifications[key] ? 'active' : ''}`}
+                        onClick={() => handleNotificationChange(key, !notifications[key])}
+                        whileTap={{ scale: 0.9 }}
+                      >
+                        <motion.div
+                          className="toggle-knob"
+                          animate={{ x: notifications[key] ? 20 : 0 }}
+                          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                        />
+                        {notifications[key] && <Check size={12} className="toggle-check" />}
+                      </motion.div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="modal-footer">
+                <button className="btn-primary" onClick={() => setShowNotificationsModal(false)}>
+                  Done
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* Privacy Modal */}
+        {showPrivacyModal && (
+          <motion.div
+            className="modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowPrivacyModal(false)}
+          >
+            <motion.div
+              className="modal-content"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="modal-header">
+                <h3>Privacy & Data Settings</h3>
+                <button onClick={() => setShowPrivacyModal(false)}>
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="modal-body">
+                <div className="privacy-options">
+                  <div className="privacy-item">
+                    <div className="privacy-info">
+                      <div className="privacy-icon">
+                        {anonymousMode ? <EyeOff size={20} /> : <Eye size={20} />}
+                      </div>
+                      <div>
+                        <h4>Anonymous Mode</h4>
+                        <p>Hide your personal data when sharing insights</p>
+                      </div>
+                    </div>
+                    <motion.div
+                      className={`toggle-switch ${anonymousMode ? 'active' : ''}`}
+                      onClick={() => setAnonymousMode(!anonymousMode)}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <motion.div
+                        className="toggle-knob"
+                        animate={{ x: anonymousMode ? 20 : 0 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                      />
+                      {anonymousMode && <Check size={12} className="toggle-check" />}
+                    </motion.div>
+                  </div>
+                  
+                  <div className="privacy-actions">
+                    <h4>Data Management</h4>
+                    <div className="action-buttons">
+                      <button className="btn-secondary" onClick={handleExportData}>
+                        <Download size={16} />
+                        Export My Data
+                      </button>
+                      <button className="btn-danger" onClick={handleDeleteAccount}>
+                        <Trash2 size={16} />
+                        Delete Account
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="modal-footer">
+                <button className="btn-primary" onClick={() => setShowPrivacyModal(false)}>
+                  Done
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
