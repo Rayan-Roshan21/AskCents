@@ -196,7 +196,7 @@ const SettingsTab = ({ user }) => {
       item.onClick()
     } else {
       // Handle navigation to other screens
-      console.log('Navigate to:', item.id)
+      // Navigation logic would go here
     }
   }
 

@@ -565,7 +565,10 @@ const server = app.listen(APP_PORT, function () {
 });
 
 const prettyPrintResponse = (response) => {
-  console.log(util.inspect(response.data, { colors: true, depth: 4 }));
+  // In production, this should be disabled or log only non-sensitive metadata
+  if (process.env.NODE_ENV === 'development') {
+    console.log('API Response received (data not logged for security)');
+  }
 };
 
 // This is a helper function to poll for the completion of an Asset Report and
@@ -800,7 +803,7 @@ const pollWithRetries = (
   });
 
 app.use('/api', function (error, request, response, next) {
-  console.log(error);
+  console.error('API Error occurred');
   prettyPrintResponse(error.response);
   response.json(formatError(error.response));
 });

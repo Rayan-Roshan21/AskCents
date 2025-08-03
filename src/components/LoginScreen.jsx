@@ -33,7 +33,6 @@ const LoginScreen = ({ onLoginComplete }) => {
   const config = {
     token: linkToken,
     onSuccess: async (publicToken, metadata) => {
-      console.log('Plaid Link Success:', { publicToken, metadata })
       setIsConnecting(true)
       setConnectionError(null)
       
@@ -41,7 +40,6 @@ const LoginScreen = ({ onLoginComplete }) => {
         // Exchange public token for access token
         const exchangeResult = await exchangePublicToken(publicToken)
         if (exchangeResult.success) {
-          console.log('Token exchange successful')
           
           // Get comprehensive user financial data
           const financialDataResult = await getUserFinancialData()
@@ -68,7 +66,6 @@ const LoginScreen = ({ onLoginComplete }) => {
             updateUser(userData)
             updatePlaidData(financialData)
 
-            console.log('User authenticated via Plaid:', userData)
             onLoginComplete(userData)
           } else {
             throw new Error('Failed to fetch financial data')
@@ -77,21 +74,20 @@ const LoginScreen = ({ onLoginComplete }) => {
           throw new Error('Token exchange failed')
         }
       } catch (error) {
-        console.error('Bank connection failed:', error.message)
+        console.error('Bank connection failed')
         setConnectionError(`Connection failed: ${error.message}`)
       } finally {
         setIsConnecting(false)
       }
     },
     onExit: (err, metadata) => {
-      console.log('Plaid Link Exit:', { err, metadata })
       setIsConnecting(false)
       if (err) {
         setConnectionError('Bank connection was cancelled or failed')
       }
     },
     onEvent: (eventName, metadata) => {
-      console.log('Plaid Link Event:', { eventName, metadata })
+      // Event tracking can be implemented here without logging sensitive data
     }
   }
 

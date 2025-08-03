@@ -6,7 +6,6 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 // Create link token
 export const createLinkToken = async () => {
   try {
-    console.log('🔗 Creating link token...')
     const response = await fetch(`${API_BASE_URL}/create_link_token`, {
       method: 'POST',
       headers: {
@@ -19,10 +18,9 @@ export const createLinkToken = async () => {
     }
 
     const data = await response.json()
-    console.log('✅ Link token created:', data.link_token)
     return { success: true, ...data }
   } catch (error) {
-    console.error('❌ Error creating link token:', error)
+    console.error('Error creating link token')
     return { success: false, error: error.message }
   }
 }
@@ -30,7 +28,6 @@ export const createLinkToken = async () => {
 // Exchange public token for access token
 export const exchangePublicToken = async (publicToken) => {
   try {
-    console.log('🔄 Exchanging public token...')
     const response = await fetch(`${API_BASE_URL}/set_access_token`, {
       method: 'POST',
       headers: {
@@ -44,10 +41,9 @@ export const exchangePublicToken = async (publicToken) => {
     }
 
     const data = await response.json()
-    console.log('✅ Token exchanged successfully')
     return { success: true, ...data }
   } catch (error) {
-    console.error('❌ Error exchanging public token:', error)
+    console.error('Error exchanging public token')
     throw new Error(`Failed to exchange token: ${error.message}`)
   }
 }
@@ -55,8 +51,6 @@ export const exchangePublicToken = async (publicToken) => {
 // Get comprehensive user financial data
 export const getUserFinancialData = async () => {
   try {
-    console.log('📊 Fetching comprehensive user data...')
-    
     // Fetch all data in parallel
     const [accounts, identity, transactions, balance] = await Promise.all([
       getAccounts(),
@@ -76,10 +70,9 @@ export const getUserFinancialData = async () => {
       lastUpdated: new Date().toISOString()
     }
 
-    console.log('✅ Financial data compiled:', financialData)
     return { success: true, data: financialData }
   } catch (error) {
-    console.error('❌ Error fetching user financial data:', error)
+    console.error('Error fetching user financial data')
     return { success: false, error: error.message }
   }
 }
@@ -91,7 +84,7 @@ export const getAccounts = async () => {
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
     return await response.json()
   } catch (error) {
-    console.error('Error getting accounts:', error)
+    console.error('Error getting accounts')
     throw error
   }
 }
@@ -103,7 +96,7 @@ export const getIdentity = async () => {
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
     return await response.json()
   } catch (error) {
-    console.error('Error getting identity:', error)
+    console.error('Error getting identity')
     throw error
   }
 }
@@ -115,7 +108,7 @@ export const getTransactions = async () => {
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
     return await response.json()
   } catch (error) {
-    console.error('Error getting transactions:', error)
+    console.error('Error getting transactions')
     throw error
   }
 }
@@ -127,7 +120,7 @@ export const getBalance = async () => {
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
     return await response.json()
   } catch (error) {
-    console.error('Error getting balance:', error)
+    console.error('Error getting balance')
     throw error
   }
 }
@@ -257,7 +250,6 @@ export const simulatePlaidLink = async (institutionName) => {
 
     // In a real implementation, you would open Plaid Link here
     // For now, we'll simulate a successful connection
-    console.log('🔗 Plaid Link would open here with token:', linkTokenResult.link_token)
     
     // Simulate user completing Plaid Link and getting a public token
     // In reality, this would come from the Plaid Link onSuccess callback
@@ -295,7 +287,7 @@ export const simulatePlaidLink = async (institutionName) => {
       public_token: mockPublicToken
     }
   } catch (error) {
-    console.error('Error in Plaid Link simulation:', error)
+    console.error('Error in Plaid Link simulation')
     return {
       success: false,
       error: error.message
@@ -340,7 +332,7 @@ export const checkBackendHealth = async () => {
       timestamp: data.timestamp
     }
   } catch (error) {
-    console.error('Backend health check failed:', error)
+    console.error('Backend health check failed')
     return {
       success: false,
       error: error.message
