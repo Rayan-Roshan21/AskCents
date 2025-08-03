@@ -94,17 +94,14 @@ const OnboardingFlow = ({ onComplete }) => {
       >
         <div className="feature-grid">
           <div className="feature-item">
-            <BarChart3 className="feature-icon" />
             <h4>Real-Time Insights</h4>
             <p>Get instant analysis of your spending patterns and financial health</p>
           </div>
           <div className="feature-item">
-            <Sparkles className="feature-icon" />
             <h4>AI-Powered Coaching</h4>
             <p>Receive personalized financial advice tailored to your student lifestyle</p>
           </div>
-          <div className="feature-item">
-            <Target className="feature-icon" />
+          <div className="feature-item centered">
             <h4>Smart Goal Setting</h4>
             <p>Set and achieve financial goals with intelligent tracking and guidance</p>
           </div>
@@ -191,9 +188,6 @@ const OnboardingFlow = ({ onComplete }) => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <div className="showcase-icon">
-              <BarChart3 size={32} />
-            </div>
             <h4>Smart Analytics</h4>
             <p>View your spending categories, track trends, and identify opportunities to save money</p>
           </motion.div>
@@ -204,9 +198,6 @@ const OnboardingFlow = ({ onComplete }) => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <div className="showcase-icon">
-              <Target size={32} />
-            </div>
             <h4>Goal Tracking</h4>
             <p>Set savings goals, track progress, and get personalized tips to reach your targets faster</p>
           </motion.div>
@@ -217,9 +208,6 @@ const OnboardingFlow = ({ onComplete }) => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <div className="showcase-icon">
-              <Sparkles size={32} />
-            </div>
             <h4>AI Insights</h4>
             <p>Get personalized recommendations and financial advice powered by artificial intelligence</p>
           </motion.div>
@@ -230,9 +218,6 @@ const OnboardingFlow = ({ onComplete }) => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <div className="showcase-icon">
-              <Shield size={32} />
-            </div>
             <h4>Secure & Private</h4>
             <p>Your financial data is protected with bank-level encryption and privacy controls</p>
           </motion.div>
@@ -250,7 +235,7 @@ const OnboardingFlow = ({ onComplete }) => {
         transition={{ delay: 0.2 }}
       >
         <div className="step-icon">
-          <span className="emoji">�</span>
+          <span className="emoji">🚀</span>
         </div>
         <h2>You're all set!</h2>
         <p>Your financial dashboard is ready. Start exploring your personalized insights and take control of your financial future.</p>

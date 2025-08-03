@@ -280,7 +280,7 @@ const InsightsTab = () => {
     if (topCategory) {
       return {
         title: "Smart tip based on your spending",
-        content: `Your biggest expense is ${topCategory.name} at $${topCategory.amount}. Consider setting a monthly budget of $${Math.round(topCategory.amount * 0.9)} to save $${Math.round(topCategory.amount * 0.1)}/month!`,
+        content: `Your biggest expense is ${topCategory.name} at $${topCategory.amount.toFixed(2)}. Consider setting a monthly budget of $${(topCategory.amount * 0.9).toFixed(2)} to save $${(topCategory.amount * 0.1).toFixed(2)}/month!`,
         icon: Lightbulb,
         actionText: "Set Budget"
       }
@@ -342,7 +342,7 @@ const InsightsTab = () => {
             </div>
             <div className="stat-content">
               <span className="stat-label">{hasPlaidData ? 'Total Balance' : 'Balance'}</span>
-              <span className="stat-value">${currentSpendingData.totalBalance?.toLocaleString() || '0'}</span>
+              <span className="stat-value">${(currentSpendingData.totalBalance || 0).toFixed(2)}</span>
             </div>
           </div>
           
@@ -352,7 +352,7 @@ const InsightsTab = () => {
             </div>
             <div className="stat-content">
               <span className="stat-label">Spent</span>
-              <span className="stat-value">${currentSpendingData.totalSpent?.toLocaleString() || '0'}</span>
+              <span className="stat-value">${(currentSpendingData.totalSpent || 0).toFixed(2)}</span>
             </div>
           </div>
           
@@ -400,7 +400,7 @@ const InsightsTab = () => {
                   </div>
                 </div>
                 <div className="category-amount">
-                  <span className="amount">${category.amount}</span>
+                  <span className="amount">${category.amount.toFixed(2)}</span>
                 </div>
               </motion.div>
             ))}
